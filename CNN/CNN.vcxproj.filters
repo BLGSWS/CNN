@@ -18,12 +18,18 @@
     <ClCompile Include="CNN.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Pre_treat.cpp">
+    <ClCompile Include="Layers.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Matrix.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Pre_treat.h">
+    <ClInclude Include="Layers.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

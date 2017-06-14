@@ -126,10 +126,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CNN.cpp" />
-    <ClCompile Include="Pre_treat.cpp" />
+    <ClCompile Include="Layers.cpp" />
+    <ClCompile Include="Matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Pre_treat.h" />
+    <ClInclude Include="Layers.h" />
+    <ClInclude Include="Matrix.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

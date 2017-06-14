@@ -4,9 +4,11 @@
 #include <opencv2/opencv.hpp>//cvResize
 #include <fstream>
 #include <string>
-#include <eigen-eigen-f562a193118d/Eigen/Dense>
+//#include <eigen-eigen-f562a193118d/Eigen/Dense>
+#include <vector>
+#include "Matrix.h"
 using namespace std;
-using namespace Eigen;
+//using namespace Eigen;
 
 
 class Size
@@ -22,25 +24,6 @@ public:
 		width = w;
 		height = h;
 	}
-	int width;
-	int height;
-};
-
-class Region
-{
-public:
-	Region()
-	{
-		mat = MatrixXd::Zero(64, 64);
-		width = height = 64;
-	}
-	Region(const int &w, const int &h)
-	{
-		mat = MatrixXd::Zero(w, h);
-		width = w;
-		height = h;
-	}
-	MatrixXd mat;
 	int width;
 	int height;
 };
@@ -76,13 +59,76 @@ public:
 	Input_layer(const Size &s)
 	{
 		size = s;
-		region = Region(s.width, s.height);
+		mat = new Matrix(s.height, s.width);
 	}
-	Region R_channel_output(const string &path);
-	Region G_channel_output(const string &path);
-	Region B_channel_output(const string &path);
-	Region gray_channel_output(const string &path);
+	~Input_layer()
+	{
+		delete mat;
+	}
+	Matrix* R_channel_output(const string &path);
+	Matrix* G_channel_output(const string &path);
+	Matrix* B_channel_output(const string &path);
+	Matrix* gray_channel_output(const string &path);
 private:
 	Size size;
-	Region region;
+	Matrix *mat;
+};
+
+class Conv_layer
+{
+public:
+	Conv_layer(const Size &k_size, const Size &i_size, const int &num, const int &step)
+	/*
+	:param k_size: 卷积核大小
+	:param i_size: 输入层map大小
+	:param num: 输出层map个数
+	:param step: 卷积核扫描步长
+	*/
+	{
+		kernel_size = k_size;
+		input_size = i_size;
+		output_num = num;
+		kernel_mat = Matrix(kernel_size.height*num, kernel_size.width);
+		kernel_mat.Ones();
+		int o_width = (i_size.width - k_size.width) / step + 1;
+		int o_height = (i_size.height - k_size.height) / step + 1;
+		output_size = Size(o_width, o_height);
+		output_mat = Matrix(output_size.height*num, output_size.width);
+		this->step = step;
+	}
+	void get_map(Matrix &input)
+	{
+		//count:卷积核个数
+		int count = input.get_height() / input_size.height;
+		for (int k=0; k < output_num; k++)
+			for (int row = 0; row < output_size.height; row++)
+				for (int col = 0; col < output_size.width; col++)
+				{
+					double value = 0.0;
+					for (int i = 0; i < count; i++)
+					{
+						//Matrix input_block = input.block(row*step + i*input_size.height, col*step, kernel_size.height, kernel_size.width);
+						//Matrix kernel = kernel_mat.block(i*input_size.height, 0, kernel_size.height, kernel_size.width);
+						value += input.convolute(kernel_mat, kernel_size.height, kernel_size.width, row*step + i*input_size.height, col*step, k);
+					}
+					output_mat.set_value(row+k*output_size.height, col, value);
+				}
+	}
+	Matrix* get_output()
+	{
+		return &output_mat;
+	}
+	void print()
+	{
+		output_mat.print();
+	}
+private:
+	Size kernel_size;
+	Size input_size;
+	Size output_size;//卷积层输出size由卷积核和输入层决定
+	Matrix kernel_mat;
+	Matrix output_mat;
+	int kernel_num;
+	int output_num;
+	int step;
 };

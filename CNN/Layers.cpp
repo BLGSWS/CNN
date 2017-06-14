@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Pre_treat.h"
+#include "Layers.h"
 
 IplImage* Pre_treat::resize(const string &picname)
 {
@@ -63,13 +63,13 @@ void Pre_treat::read_by_list()
 	myfile.close();
 }
 
-Region Input_layer::gray_channel_output(const string &path)
+Matrix* Input_layer::gray_channel_output(const string &path)
 {
 	IplImage* img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
 	{
 		cout << "error in open image file " << path << endl;
-		return region;
+		return mat;
 	}
 	IplImage* gray_img = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 1);
 	cvCvtColor(img, gray_img, CV_BGR2GRAY);
@@ -80,18 +80,19 @@ Region Input_layer::gray_channel_output(const string &path)
 		for (int j = 0; j < gray_img->width; j++)
 		{
 			temp = data[i*step + j];
-			region.mat(i, j) = (int)temp / 255.0;
+			//region.mat(i, j) = (int)temp / 255.0;
+			mat->set_value(i, j, (int)temp / 255.0);
 		}
-	return region;
+	return mat;
 }
 
-Region Input_layer::R_channel_output(const string &path)
+Matrix* Input_layer::R_channel_output(const string &path)
 {
 	IplImage *img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
 	{
 		cout << "error in open image file" << path << endl;
-		return region;
+		return mat;
 	}
 	int step = img->widthStep / sizeof(uchar);
 	uchar *data = (uchar*)img->imageData;
@@ -100,18 +101,18 @@ Region Input_layer::R_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j + 2];
-			region.mat(i, j) = (int)temp / 255.0;
+			mat->set_value(i, j, (int)temp / 255.0);
 		}
-	return region;
+	return mat;
 }
 
-Region Input_layer::G_channel_output(const string &path)
+Matrix* Input_layer::G_channel_output(const string &path)
 {
 	IplImage *img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
 	{
 		cout << "error in open image file" << path << endl;
-		return region;
+		return mat;
 	}
 	int step = img->widthStep / sizeof(uchar);
 	uchar *data = (uchar*)img->imageData;
@@ -120,18 +121,18 @@ Region Input_layer::G_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j + 1];
-			region.mat(i, j) = (int)temp / 255.0;
+			mat->set_value(i, j, (int)temp / 255.0);
 		}
-	return region;
+	return mat;
 }
 
-Region Input_layer::B_channel_output(const string &path)
+Matrix* Input_layer::B_channel_output(const string &path)
 {
 	IplImage *img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
 	{
 		cout << "error in open image file" << path << endl;
-		return region;
+		return mat;
 	}
 	int step = img->widthStep / sizeof(uchar);
 	uchar *data = (uchar*)img->imageData;
@@ -140,8 +141,7 @@ Region Input_layer::B_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j];
-			region.mat(i, j) = (int)temp / 255.0;
+			mat->set_value(i, j, (int)temp / 255.0);
 		}
-	cout << region.mat;
-	return region;
+	return mat;
 }
