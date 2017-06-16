@@ -10,3 +10,11 @@ ostream &operator<<(ostream &os, Matrix *mat)
 	}
 	return os;
 }
+
+Matrix operator*(const Matrix &m, const double &d)
+{
+	Matrix mat = m;
+	for (int i = 0; i < mat.height*mat.width; i++)
+		mat.matrix[i] = m.matrix[i] * d;
+	return mat;
+}

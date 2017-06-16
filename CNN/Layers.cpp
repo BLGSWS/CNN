@@ -81,7 +81,7 @@ Matrix* Input_layer::gray_channel_output(const string &path)
 		{
 			temp = data[i*step + j];
 			//region.mat(i, j) = (int)temp / 255.0;
-			mat->set_value(i, j, (int)temp / 255.0);
+			(*mat)(i, j) = (int)temp / 255.0;
 		}
 	return mat;
 }
@@ -101,7 +101,7 @@ Matrix* Input_layer::R_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j + 2];
-			mat->set_value(i, j, (int)temp / 255.0);
+			(*mat)(i, j) = (int)temp / 255.0;
 		}
 	return mat;
 }
@@ -121,7 +121,7 @@ Matrix* Input_layer::G_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j + 1];
-			mat->set_value(i, j, (int)temp / 255.0);
+			(*mat)(i, j) = (int)temp / 255.0;
 		}
 	return mat;
 }
@@ -141,7 +141,7 @@ Matrix* Input_layer::B_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j];
-			mat->set_value(i, j, (int)temp / 255.0);
+			(*mat)(i, j) = (int)temp / 255.0;
 		}
 	return mat;
 }

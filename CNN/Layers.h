@@ -111,7 +111,7 @@ public:
 						//Matrix kernel = kernel_mat.block(i*input_size.height, 0, kernel_size.height, kernel_size.width);
 						value += input.convolute(kernel_mat, kernel_size.height, kernel_size.width, row*step + i*input_size.height, col*step, k);
 					}
-					output_mat.set_value(row+k*output_size.height, col, value);
+					output_mat(row + k*output_size.height, col) = value;
 				}
 	}
 	Matrix* get_output()
@@ -131,4 +131,43 @@ private:
 	int kernel_num;
 	int output_num;
 	int step;
+};
+
+class Pool_layer
+{
+public:
+	Pool_layer(const Size &k_size, const Size &i_size, const int &n)
+	{
+		kernel_size = k_size;
+		input_size = i_size;
+		kernel_mat = Matrix(k_size.height, k_size.width);
+		double avg = 1.0 / (k_size.height*k_size.width);
+		kernel_mat.Ones();
+		kernel_mat = kernel_mat*avg;
+		output_size = Size(input_size.height / kernel_size.height, input_size.width / kernel_size.width);
+		output_mat = Matrix(output_size.height*n, output_size.width);
+		output_num = n;
+	}
+	void get_map(Matrix &input)
+	{
+		for (int i = 0; i < output_num; i++)
+			for (int j = 0; j<output_size.width; j++)
+				for (int k = 0; k < output_size.height; k++)
+				{
+					double value = input.convolute(kernel_mat, kernel_size.height, kernel_size.width, k*kernel_size.height, j*kernel_size.width, 0);
+					output_mat(k + i*output_size.height, j) = value;
+				}
+	}
+	void print_output()
+	{
+		output_mat.print();
+	}
+private:
+	Size kernel_size;
+	Size input_size;
+	Size output_size;
+	Matrix kernel_mat;
+	Matrix output_mat;
+	//int kernel_num;//池化层卷积核权值共享
+	int output_num;
 };

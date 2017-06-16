@@ -43,13 +43,10 @@ public:
 			matrix = 0;
 		}
 	}
-	double operator()(const int &i, const int &j) const
+	friend Matrix operator*(const Matrix &mat, const double &d);
+	double& operator()(const int &i, const int &j) const
 	{
 		return *(matrix + i*width + j);
-	}
-	void set_value(const int &i, const int &j, const double &value)
-	{
-		matrix[i*width + j] = value;
 	}
 	friend ostream &operator<<(ostream &os, Matrix *mat);
 	void Ones()
@@ -67,7 +64,7 @@ public:
 		Matrix mat = Matrix(h, w);
 		for (int p = i; p < i + h; p++)
 			for (int q = j; q < j + w; q++)
-				mat.set_value(p, q, (*this)(p, q));
+				mat(p, q) = (*this)(p, q);
 		return mat;
 	}
 	double convolute(const Matrix &kernel, const int &k_h, const int &k_w, const int &x, const int &y, const int &k_num)
@@ -83,7 +80,6 @@ public:
 				sum += (*this)(x + i, y + j) * kernel(i + k_num*k_h, j);
 		return sum;
 	}
-
 	void print()
 	{
 		for (int i = 0; i < height; i++)
