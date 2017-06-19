@@ -39,19 +39,15 @@ public:
 	Input_layer(const Size &s)
 	{
 		size = s;
-		mat = new Matrix(s.height, s.width);
+		mat = Matrix(s.height, s.width, 1);
 	}
-	~Input_layer()
-	{
-		delete mat;
-	}
-	Matrix* R_channel_output(const string &path);
-	Matrix* G_channel_output(const string &path);
-	Matrix* B_channel_output(const string &path);
-	Matrix* gray_channel_output(const string &path);
+	Matrix R_channel_output(const string &path);
+	Matrix G_channel_output(const string &path);
+	Matrix B_channel_output(const string &path);
+	Matrix gray_channel_output(const string &path);
 private:
 	Size size;
-	Matrix *mat;
+	Matrix mat;
 };
 
 class Conv_layer
@@ -69,36 +65,31 @@ public:
 		input_size = i_size;
 		output_num = o_num;
 		input_num = i_num;
-		kernel_mat = Matrix::Identity(kernel_size.height*i_num*o_num, kernel_size.width);
+		kernel_mat = Matrix::Identity(kernel_size.height*o_num, kernel_size.width, i_num);
 		int o_width = (i_size.width - k_size.width) / step + 1;
 		int o_height = (i_size.height - k_size.height) / step + 1;
 		output_size = Size(o_width, o_height);
-		output_mat = residual_mat = Matrix(output_size.height*o_num, output_size.width);
+		output_mat = residual_mat = Matrix(output_size, o_num);
 		this->step = step;
 	}
 	Matrix& get_output(Matrix &input)
 	{
-		//count:卷积核个数
-		int count = input.get_height() / input_size.height;
-		if (count != input_num)
+		if (input.get_depth() != input_num)
 		{
-			cout << "Conv_layer: get_output: kernel not match" << endl;
-			return Matrix();
+			cout << "Conv_layer: get_output: input not match init";
+			cout << endl;
 		}
-		for (int k=0; k < output_num; k++)
-			for (int row = 0; row < output_size.height; row++)
-				for (int col = 0; col < output_size.width; col++)
+		for(int k = 0; k < output_num; k++)
+			for(int i = 0; i < output_size.height; i++)
+				for (int j = 0; j < output_size.width; j++)
 				{
-					double value = 0.0;
-					for (int i = 0; i < input_num; i++)
-					{
-						value += input.convolute(kernel_mat, kernel_size.height, kernel_size.width, row*step + i*input_size.height, col*step, k*input_num + i);
-					}
-					output_mat(row + k*output_size.height, col) = sigmoid(value);
+					//申请了内存
+					Matrix kernel = kernel_mat.block(kernel_size.height*k, 0, 0, kernel_size.height, kernel_size.width, input_num);
+					output_mat(i, j, k) = sigmoid(input.convolute1(kernel, i*step, j*step));
 				}
 		return output_mat;
 	}
-	Matrix post_propagate(Matrix &input)
+	/*Matrix post_propagate(Matrix &input)
 	{
 
 		Matrix rd_mat(input.get_height(), input.get_width());
@@ -128,11 +119,7 @@ public:
 			return;
 		}
 		residual_mat = rd_mat;
-	}
-	void print()
-	{
-		output_mat.print();
-	}
+	}*/
 private:
 	Size kernel_size;
 	Size input_size;
@@ -149,29 +136,33 @@ private:
 class Pool_layer
 {
 public:
-	Pool_layer(const Size &k_size, const Size &i_size, const int &n)
+	Pool_layer(const Size &k_size, const Size &i_size, const int &o_num)
 	{
 		kernel_size = k_size;
 		input_size = i_size;
-		kernel_mat = Matrix::Ones(k_size.height, k_size.width);
 		double avg = 1.0 / (k_size.height*k_size.width);
-		kernel_mat = kernel_mat*avg;
+		kernel_mat = Matrix::Ones(k_size.height, k_size.width, 1)*avg;//均值卷积
 		output_size = Size(input_size.height / kernel_size.height, input_size.width / kernel_size.width);
-		output_mat = resdiual_mat = Matrix(output_size.height*n, output_size.width);
-		output_num = n;
+		output_mat = resdiual_mat = Matrix(output_size, o_num);
+		output_num = o_num;
 	}
 	Matrix& get_output(const Matrix &input)
 	{
-		for (int i = 0; i < output_num; i++)
-			for (int j = 0; j<output_size.width; j++)
-				for (int k = 0; k < output_size.height; k++)
+		if (input.get_depth() != output_num)
+		{
+			cout << "Pool_layer: get_output: input not match init";
+			cout << endl;
+		}
+		for (int k = 0; k < output_num; k++)
+			for (int j = 0; j < output_size.width; j++)
+				for (int i = 0; i < output_size.height; i++)
 				{
-					double value = input.convolute(kernel_mat, kernel_size.height, kernel_size.width, k*kernel_size.height, j*kernel_size.width, 0);
-					output_mat(k + i*output_size.height, j) = sigmoid(value);
+					Matrix mat = input.block(0, 0, k, input_size.height, input_size.width, 1);
+					output_mat(i, j, k) = sigmoid(mat.convolute1(kernel_mat, j*kernel_size.height, i*kernel_size.width));
 				}
 		return output_mat;
 	}
-	Matrix post_propagate(const Matrix &input)
+	/*Matrix post_propagate(const Matrix &input)
 	{
 		Matrix rd_mat(input.get_height(), input.get_width());
 		for (int i = 0; i < rd_mat.get_height(); i++)
@@ -191,7 +182,7 @@ public:
 	void print_output()
 	{
 		output_mat.print();
-	}
+	}*/
 private:
 	Size kernel_size;
 	Size input_size;
@@ -210,24 +201,26 @@ public:
 		//行数加1代表权值
 		input_size = i_size;
 		input_num = i_num;
-		weight_mat = Matrix::Ones(o_num, i_size.height*i_size.width*i_num + 1);
-		output_mat = residual_mat = Matrix(o_num, 1);
+		weight_mat = Matrix::Ones(i_size.height*o_num, i_size.width, i_num);
+		output_mat = residual_mat = threshold_mat = Matrix(o_num, 1, 1);
 	}
 	Matrix& get_output(const Matrix &input)
 	{
 		for (int i = 0; i < output_mat.get_height(); i++)
-			output_mat(i, 0) = sigmoid(dot(weight_mat, input, i));
+		{
+			Matrix kernel = weight_mat.block(input_size.height*i, 0, 0, input_size.height, input_size.width, input_num);
+			output_mat(i, 0, 0) = input.convolute1(kernel, 0, 0);
+		}
+		output_mat = (output_mat - threshold_mat).sigmoid_all();
 		return output_mat;
 	}
 	void get_residual(const Matrix &targets)
 	{
 		for (int i = 0; i < targets.get_height(); i++)
-			residual_mat(i, 0) = output_mat.get_residual(targets, i);
+			residual_mat(i, 0, 0) = output_mat(i, 0, 0)*(1 - output_mat(i, 0, 0))*(targets(i, 0, 0) - output_mat(i, 0, 0));
 	}
-	Matrix post_propagate(const Matrix &input, const double &stride)
-	/*
-	:param input:上一层输出
-	*/
+	/*Matrix post_propagate(const Matrix &input, const double &stride)
+	//:param input:上一层输出
 	{
 		for (int i = 0; i < weight_mat.get_height(); i++)
 			for (int j = 0; j < weight_mat.get_width(); j++)
@@ -244,17 +237,14 @@ public:
 		for (int i = 0; i < rd_mat.get_height()*rd_mat.get_width(); i++)
 			rd_mat(i / rd_mat.get_width(), i%rd_mat.get_width()) = dot(residual_mat.transpose(), weight_mat, 0, i);
 		return rd_mat;
-	}
-	void print_output()
-	{
-		output_mat.print();
-	}
+	}*/
 private:
 	Size input_size;//输入层map大小
 	//Size output_size;//输出层
 	Matrix weight_mat;//权值矩阵
 	Matrix output_mat;//输出矩阵（向量）
 	Matrix residual_mat;
+	Matrix threshold_mat;
 	//int output_num;//输出参数数量
 	int input_num;//输入层map数量
 };

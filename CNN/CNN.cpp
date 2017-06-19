@@ -44,7 +44,7 @@ int main()
 	Matrix rd_mat(16, 4);
 	rd_mat = layer3.post_propagate(input_mat, 1);*/
 	//cout << *output;
-	Matrix input1 = Matrix::Identity(10, 10);
+	Matrix input1 = Matrix::Identity(10, 10, 1);
 	cout << "input1:" << endl;
 	cout << input1;
 	Conv_layer layer1 = Conv_layer(Size(5, 5), Size(10, 10), 1, 6, 1);

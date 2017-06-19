@@ -63,7 +63,7 @@ void Pre_treat::read_by_list()
 	myfile.close();
 }
 
-Matrix* Input_layer::gray_channel_output(const string &path)
+Matrix Input_layer::gray_channel_output(const string &path)
 {
 	IplImage* img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
@@ -81,12 +81,12 @@ Matrix* Input_layer::gray_channel_output(const string &path)
 		{
 			temp = data[i*step + j];
 			//region.mat(i, j) = (int)temp / 255.0;
-			(*mat)(i, j) = (int)temp / 255.0;
+			mat(i, j, 0) = (int)temp / 255.0;
 		}
 	return mat;
 }
 
-Matrix* Input_layer::R_channel_output(const string &path)
+Matrix Input_layer::R_channel_output(const string &path)
 {
 	IplImage *img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
@@ -101,12 +101,12 @@ Matrix* Input_layer::R_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j + 2];
-			(*mat)(i, j) = (int)temp / 255.0;
+			mat(i, j, 0) = (int)temp / 255.0;
 		}
 	return mat;
 }
 
-Matrix* Input_layer::G_channel_output(const string &path)
+Matrix Input_layer::G_channel_output(const string &path)
 {
 	IplImage *img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
@@ -121,12 +121,12 @@ Matrix* Input_layer::G_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j + 1];
-			(*mat)(i, j) = (int)temp / 255.0;
+			mat(i, j, 0) = (int)temp / 255.0;
 		}
 	return mat;
 }
 
-Matrix* Input_layer::B_channel_output(const string &path)
+Matrix Input_layer::B_channel_output(const string &path)
 {
 	IplImage *img = cvLoadImage(path.c_str());
 	if (!img || !img->imageData)
@@ -141,7 +141,7 @@ Matrix* Input_layer::B_channel_output(const string &path)
 		for (int j = 0; j < img->width; j++)
 		{
 			temp = data[step*i + j];
-			(*mat)(i, j) = (int)temp / 255.0;
+			mat(i, j, 0) = (int)temp / 255.0;
 		}
 	return mat;
 }
