@@ -140,12 +140,12 @@ public:
 					sum += (*this)(x + i, y + j, k) * kernel(i, j, k);
 		return sum;
 	}
-	double convolute2(const Matrix &kernel, const int &x, const int &y, const int &z) const
+	double convolute2(const Matrix &kernel, const int &x, const int &y) const
 	//:param kernel: 卷积核
 	//:param x,y,z: 卷积中心
 	//:return: 卷积值
 	{
-		if (x<-kernel.height + 1 || y<-kernel.width + 1 || x>(*this).height - 1 || y>(*this).width - 1)
+		if (x<-kernel.height + 1 || y<-kernel.width + 1 || x>height - 1 || y>width - 1)
 		{
 			cout << "Matrix: expand_convolute: out of range" << endl;
 			return 0.0;
@@ -154,19 +154,19 @@ public:
 		for(int i=0;i<kernel.height;i++)
 			for (int j = 0; j < kernel.width; j++)
 			{
-				if (x + i<0 || y + j<0 || x + i>(*this).height - 1 || y + j>(*this).width - 1)
+				if (x + i<0 || y + j<0 || x + i>height - 1 || y + j>width - 1)
 					continue;
-				sum += kernel(i, j, 1)*(*this)(x + i, y + j, z);
+				sum += kernel(i, j, 1)*(*this)(x + i, y + j, 1);
 			}
 		return sum;
 	}
-	void rotation()
+	Matrix rotation()
 	//:summary:卷积核旋转180度
 	{
 		if (depth != 1)
 		{
 			cout << "Matrix: rotation: not kernel";
-			return;
+			return *this;
 		}
 		int i = 0, j = height*width - 1;
 		double temp;
@@ -175,7 +175,10 @@ public:
 			temp = matrix[i];
 			matrix[i] = matrix[j];
 			matrix[j] = temp;
+			i++;
+			j--;
 		}
+		return *this;
 	}
 	friend double dot(const Matrix &mat1, const Matrix &mat2, const int &row, const int &col);
 	friend double dot(const Matrix &mat1, const Matrix &mat2, const int &row);
