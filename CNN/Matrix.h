@@ -71,14 +71,15 @@ public:
 	}
 	friend Matrix operator*(const Matrix &mat, const double &d);
 	friend Matrix operator*(const double &d, const Matrix &mat);
-	friend Matrix operator*(const Matrix &mat1, const Matrix &mat2);
 	friend Matrix operator-(const Matrix &mat1, const Matrix &mat2);
+	friend Matrix operator+(const Matrix &mat1, const Matrix &mat2);
 	double& operator()(const int &i, const int &j, const int &k) const
 	{
-		if (i > height || j > width || k > depth)
+		if (i > height-1 || j > width-1 || k > depth-1 || i < 0 || j < 0 || k < 0)
 		{
 			cout << "(" << i << "," << j << "," << k <<")"
-				<< " is out of range h=" << height << " and w=" << width << " and d=" << depth << endl;
+				<< " is out of h=" << height << " and w=" << width << " and d=" << depth << endl;
+			throw  out_of_range("out of range");
 		}
 		return *(matrix + k*width*height +i*width + j);
 	}
@@ -110,7 +111,7 @@ public:
 		if (i + h > height || j + w > width)
 		{
 			cout << "Matrix: block: out of range" << endl;
-			return Matrix();
+			throw  out_of_range("access out of range element");
 		}
 		Matrix mat(h, w, d);
 		for (int r = k; r < k + d; r++)
@@ -119,25 +120,25 @@ public:
 					mat(p - i, q - j, r - k) = (*this)(p, q, r);
 		return mat;
 	}
-	double convolute1(const Matrix &kernel, const int &x, const int &y) const
+	double convolute(const Matrix &kernel, const int &x, const int &y) const
 	//:param kernel: 卷积核
 	//:param x,y,z: 卷积中心
 	//:return: 卷积值
 	{
 		if (x + kernel.height > height || y + kernel.width > width)
 		{
-			cout << "Matrix: convolute: output out of range" << endl;
-			return 0.0;
+			cout << "Matrix: convolute: kernel will out of map" << endl;
+			throw  out_of_range("access out of range element");
 		}
-		if (kernel.depth != depth)
+		if (kernel.depth != 1 || depth != 1)
 		{
 			cout << "Matrix: convolute: depth not match" << endl;
+			throw  invalid_argument("arguments not match");
 		}
 		double sum = 0;
-		for (int k =0; k<kernel.depth; k++)
-			for (int i = 0; i < kernel.height; i++)
-				for (int j = 0; j < kernel.width; j++)
-					sum += (*this)(x + i, y + j, k) * kernel(i, j, k);
+		for (int i = 0; i < kernel.height; i++)
+			for (int j = 0; j < kernel.width; j++)
+				sum += (*this)(x + i, y + j, 0) * kernel(i, j, 0);
 		return sum;
 	}
 	double convolute2(const Matrix &kernel, const int &x, const int &y) const
@@ -147,8 +148,13 @@ public:
 	{
 		if (x<-kernel.height + 1 || y<-kernel.width + 1 || x>height - 1 || y>width - 1)
 		{
-			cout << "Matrix: expand_convolute: out of range" << endl;
-			return 0.0;
+			cout << "Matrix: convolute2: kernel will out of map" << endl;
+			throw  out_of_range("access out of range element");
+		}
+		if (kernel.depth != 1 || depth != 1)
+		{
+			cout << "Matrix: convolute: depth not match" << endl;
+			throw  invalid_argument("arguments not match");
 		}
 		double sum = 0.0;
 		for(int i=0;i<kernel.height;i++)
@@ -156,7 +162,7 @@ public:
 			{
 				if (x + i<0 || y + j<0 || x + i>height - 1 || y + j>width - 1)
 					continue;
-				sum += kernel(i, j, 1)*(*this)(x + i, y + j, 1);
+				sum += kernel(i, j, 0)*(*this)(x + i, y + j, 0);
 			}
 		return sum;
 	}
@@ -166,7 +172,7 @@ public:
 		if (depth != 1)
 		{
 			cout << "Matrix: rotation: not kernel";
-			return *this;
+			throw  invalid_argument("arguments not match");
 		}
 		int i = 0, j = height*width - 1;
 		double temp;
@@ -180,8 +186,6 @@ public:
 		}
 		return *this;
 	}
-	friend double dot(const Matrix &mat1, const Matrix &mat2, const int &row, const int &col);
-	friend double dot(const Matrix &mat1, const Matrix &mat2, const int &row);
 	Matrix transpose() const
 	{
 		Matrix mat(width, height, depth);

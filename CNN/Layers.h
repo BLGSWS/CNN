@@ -77,16 +77,21 @@ public:
 	{
 		if (input.get_depth() != input_num)
 		{
-			cout << "Conv_layer: get_output: input not match init" << endl;
-			return output_mat;
+			cout << "Conv_layer: get_output: not match input map" << endl;
+			throw invalid_argument("not match input map");
 		}
 		for(int k = 0; k < output_num; k++)
 			for(int i = 0; i < output_size.height; i++)
 				for (int j = 0; j < output_size.width; j++)
 				{
-					//ÉêÇëÁËÄÚ´æ
-					Matrix kernel = kernel_mat.block(kernel_size.height*k, 0, 0, kernel_size.height, kernel_size.width, input_num);
-					output_mat(i, j, k) = sigmoid(input.convolute1(kernel, i*step, j*step));
+					double output = 0.0;
+					for (int m = 0; m < input_num; m++)
+					{
+						Matrix k_mat = kernel_mat.block(kernel_size.height*k, 0, m, kernel_size.height, kernel_size.width, 1);
+						Matrix i_mat = input.block(0, 0, m, input_size.height, input_size.width, 1);
+						output += i_mat.convolute(k_mat, i*step, j*step);
+					}
+					output_mat(i, j, k) = sigmoid(output);
 				}
 		return output_mat;
 	}
@@ -156,15 +161,15 @@ public:
 	{
 		if (input.get_depth() != output_num)
 		{
-			cout << "Pool_layer: get_output: input not match init";
-			cout << endl;
+			cout << "Pool_layer: get_output: not match input map" << endl;
+			throw invalid_argument("not match input map");
 		}
 		for (int k = 0; k < output_num; k++)
 			for (int j = 0; j < output_size.width; j++)
 				for (int i = 0; i < output_size.height; i++)
 				{
-					Matrix mat = input.block(0, 0, k, input_size.height, input_size.width, 1);
-					output_mat(i, j, k) = sigmoid(mat.convolute1(kernel_mat, j*kernel_size.height, i*kernel_size.width));
+					Matrix i_mat = input.block(0, 0, k, input_size.height, input_size.width, 1);
+					output_mat(i, j, k) = sigmoid(i_mat.convolute(kernel_mat, j*kernel_size.height, i*kernel_size.width));
 				}
 		return output_mat;
 	}
@@ -200,10 +205,21 @@ public:
 	}
 	Matrix& get_output(const Matrix &input)
 	{
+		if (input.get_depth() != input_num)
+		{
+			cout << "Conv_layer: get_output: not match input map" << endl;
+			throw invalid_argument("not match input map");
+		}
 		for (int i = 0; i < output_mat.get_height(); i++)
 		{
-			Matrix kernel = weight_mat.block(input_size.height*i, 0, 0, input_size.height, input_size.width, input_num);
-			output_mat(i, 0, 0) = input.convolute1(kernel, 0, 0);
+			double output = 0.0;
+			for (int j = 0; j < input_num; j++)
+			{
+				Matrix k_mat = weight_mat.block(input_size.height*i, 0, j, input_size.height, input_size.width, 1);
+				Matrix i_mat = input.block(0, 0, j, input_size.height, input_size.width, 1);
+				output += i_mat.convolute(k_mat, 0, 0);
+			}
+			output_mat(i, 0, 0) = output;
 		}
 		output_mat = (output_mat - threshold_mat).sigmoid_all();
 		return output_mat;

@@ -33,7 +33,7 @@ Matrix operator-(const Matrix &mat1, const Matrix &mat2)
 	if (mat1.height != mat2.height || mat1.width != mat2.width || mat1.depth != mat2.depth)
 	{
 		cout << "Matrix: minus: not match" << endl;
-		return Matrix();
+		throw  range_error("out of range");
 	}
 	Matrix mat(mat1.height, mat1.width, mat1.depth);
 	for(int k = 0;k < mat1.depth; k++)
@@ -43,24 +43,20 @@ Matrix operator-(const Matrix &mat1, const Matrix &mat2)
 	return mat;
 }
 
-/*Matrix operator*(const Matrix &mat1, const Matrix &mat2)
+Matrix operator+(const Matrix &mat1, const Matrix &mat2)
 {
-	if (mat1.width!= mat2.height)
+	if (mat1.height != mat2.height || mat1.width != mat2.width || mat1.depth != mat2.depth)
 	{
-		cout << "Matrix: multiply: not match" << endl;
-		return Matrix();
+		cout << "Matrix: minus: not match" << endl;
+		throw  range_error("out of range");
 	}
-	Matrix mat(mat1.height, mat2.width);
-	for (int i = 0; i < mat1.height; i++)
-		for (int j = 0; j < mat2.width; j++)
-		{
-			double value = 0.0;
-			for (int k = 0; k < mat1.width; k++)
-				value += mat1(i, k)*mat2(k, j);
-			mat(i, j) = value;
-		}
+	Matrix mat(mat1.height, mat1.width, mat1.depth);
+	for (int k = 0; k < mat1.depth; k++)
+		for (int i = 0; i < mat1.height; i++)
+			for (int j = 0; j < mat1.width; j++)
+				mat(i, j, k) = mat1(i, j, k) + mat2(i, j, k);
 	return mat;
-}*/
+}
 
 double sigmoid(const double &x)
 {
