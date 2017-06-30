@@ -2,6 +2,7 @@
 #include <ostream>
 #include <iostream>
 #include <math.h>
+#include <time.h>
 using namespace std;
 
 double sigmoid(const double &x);
@@ -20,18 +21,200 @@ public:
 		width = w;
 		height = h;
 	}
+	bool is_square() const
+	{
+		if (width == height)
+			return true;
+		else
+			return false;
+	}
 	int width;
 	int height;
+};
+
+class Map
+{
+public:
+	Map() :
+		height(0), width(0), map(0) { }
+	Map(const Size &s) :
+		height(s.height), width(s.width)
+	{
+		map = new double[height*width];
+		for (int i = 0; i < height*width; i++)
+			map[i] = 0.0;
+	}
+	static Map Identity(const Size &s)
+	{
+		if (!s.is_square())
+		{
+			cout << "Map: Indentity: not square map (h=" 
+				<< s.height << ", w=" << s.width << ")" << endl;
+			throw exception();
+		}
+		Map m = Map(s);
+		for (int i = 0; i < s.height; i++)
+			for (int j = 0; j < s.width; j++)
+				if (i == j)
+					m.value(i, j) = 1.0;
+		return m;
+	}
+	static Map Ones(const Size &s)
+	{
+		Map m = Map(s);
+		for (int i = 0; i < s.height; i++)
+			for (int j = 0; j < s.width; j++)
+					m.value(i, j) = 1.0;
+		return m;
+	}
+	static Map Random(const Size &s)
+	{
+		Map m = Map(s);
+		for (int i = 0; i < s.height; i++)
+			for (int j = 0; j < s.width; j++)
+				m.value(i, j) = (rand() % 2001 - 1000) / 1000.0;
+		return m;
+	}
+	~Map()
+	{
+		delete[] map;
+		map = 0;
+	}
+	Map(const Map &m)
+	{
+		copy_data(m);
+	}
+	Map operator=(const Map &m)
+	{
+		copy_data(m);
+		return *this;
+	}
+	inline double& value(const int &i, const int &j) const
+	{
+		if (i > height - 1 || j > width - 1  || i < 0 || j < 0)
+		{
+			cout << "(" << i << "," << j << ") is out of h="
+				<< height << " and w=" << width << endl;
+			throw  exception();
+		}
+		return *(map + i*width + j);
+	}
+	inline double convolute(const Map &kernel, const int &y, const int &x) const
+	{
+		if (y + kernel.height > height || x + kernel.width > width)
+		{
+			throw exception();
+		}
+		double sum = 0.0;
+		for (int i = 0; i < kernel.height; i++)
+			for (int j = 0; j < kernel.width; j++)
+				sum += kernel.value(i, j)*(*this).value(y + i, x + j);
+		return sum;
+	}
+	inline double convolute2(const Map &kernel, const int &y, const int &x) const
+	{
+		if (y<-kernel.height + 1 || x<-kernel.width + 1 || y>height - 1 || x>width - 1)
+		{
+			cout << "Map: convolute2: kernel will out of map" << endl;
+			throw  exception();
+		}
+		double sum = 0.0;
+		for (int i = 0; i < kernel.height; i++)
+			for (int j = 0; j < kernel.width; j++)
+			{
+				if (y + i < 0 || x + j < 0 || y + i > height - 1 || x + j > width - 1)
+					continue;
+				sum += kernel.value(kernel.height - i - 1, kernel.width - j - 1)*(*this).value(y + i, x + j);
+			}
+		return sum;
+	}
+	double norm() const
+	{
+		double sum = 0.0;
+		for (int i = 0; i < width*height; i++)
+			sum += map[i];
+		return sum;
+	}
+	void multiply(const double &d)
+	{
+		for (int i = 0; i < height*width; i++)
+			map[i] = map[i] * d;
+	}
+	void clear()
+	{
+		for (int i = 0; i < height*width; i++)
+			map[i] = 0.0;
+	}
+	friend ostream &operator<<(ostream &os, const Map &m);
+protected:
+	void copy_data(const Map &m)
+	{
+		height = m.height;
+		width = m.width;
+		if (height == 0 || width == 0)
+			map = 0;
+		else
+		{
+			map = new double[height*width];
+			for (int i = 0; i < height*width; i++)
+				map[i] = m.map[i];
+		}
+	}
+private:
+	int height;
+	int width;
+	double *map;
 };
 
 class Matrix
 {
 public:
-	Matrix()
+	Matrix():
+		height(0), width(0), matrix(0){}
+	Matrix(const Size &s, const int &h, const int &w):
+		height(h), width(w), size(s)
 	{
-		height = 0;
-		width = 0;
-		depth = 0;
+		matrix = new Map[height*width];
+		for (int i = 0; i < height*width; i++)
+			matrix[i] = Map(s);
+	}
+	static Matrix Identity(const Size &s, const int &h, const int &w)
+	{
+		Matrix mat;
+		mat.size = s;
+		mat.height = h;
+		mat.width = w;
+		mat.matrix = new Map[h*w];
+		for (int i = 0; i < h*w; i++)
+			mat.matrix[i] = Map::Identity(s);
+		return mat;
+	}
+	static Matrix Ones(const Size &s, const int &h, const int &w)
+	{
+		Matrix mat;
+		mat.size = s;
+		mat.height = h;
+		mat.width = w;
+		mat.matrix = new Map[h*w];
+		for (int i = 0; i < h*w; i++)
+			mat.matrix[i] = Map::Ones(s);
+		return mat;
+	}
+	static Matrix Random(const Size &s, const int &h, const int &w)
+	{
+		Matrix mat;
+		srand(unsigned(time(0)));
+		mat.size = s;
+		mat.height = h;
+		mat.width = w;
+		mat.matrix = new Map[h*w];
+		for (int i = 0; i < h*w; i++)
+			mat.matrix[i] = Map::Random(s);
+		return mat;
+	}
+	~Matrix()
+	{
+		delete[] matrix;
 		matrix = 0;
 	}
 	Matrix(const Matrix &mat)
@@ -43,168 +226,44 @@ public:
 		copy_data(mat);
 		return *this;
 	}
-	Matrix(const int &h, const int &w, const int &d)
+	Map& operator()(const int &i, const int &j) const
 	{
-		height = h;
-		width = w;
-		depth = d;
-		matrix = new double[w*h*d];
-		for (int i = 0; i < w*h*d; i++)
-			matrix[i] = 0.0;
-	}
-	Matrix(const Size &size, const int &d)
-	{
-		height = size.height;
-		width = size.width;
-		depth = d;
-		matrix = new double[height*width*d];
-		for (int i = 0; i < height*width*d; i++)
-			matrix[i] = 0.0;
-	}
-	~Matrix()
-	{
-		if (matrix != 0)
+		if (i > height - 1 || j > width - 1 || i < 0 || j < 0)
 		{
-			delete []matrix;
-			matrix = 0;
+			cout << "(" << i << "," << j << ")"
+				<< " is out of h=" << height << " and w=" << width << endl;
+			throw  exception();
 		}
+		return *(matrix + i*width + j);
 	}
-	friend Matrix operator*(const Matrix &mat, const double &d);
-	friend Matrix operator*(const double &d, const Matrix &mat);
-	friend Matrix operator-(const Matrix &mat1, const Matrix &mat2);
-	friend Matrix operator+(const Matrix &mat1, const Matrix &mat2);
-	double& operator()(const int &i, const int &j, const int &k) const
-	{
-		if (i > height-1 || j > width-1 || k > depth-1 || i < 0 || j < 0 || k < 0)
-		{
-			cout << "(" << i << "," << j << "," << k <<")"
-				<< " is out of h=" << height << " and w=" << width << " and d=" << depth << endl;
-			throw  out_of_range("out of range");
-		}
-		return *(matrix + k*width*height +i*width + j);
-	}
-	friend ostream &operator<<(ostream &os, Matrix mat);
-	static Matrix Identity(const int &h, const int &w, const int &d)
-	{
-		Matrix mat(h, w, d);
-		for(int k=0;k<d;k++)
-			for(int j=0;j<h;j++)
-				for (int i = 0; i < w; i++)
-				{
-					if (j%w == i)
-						mat(j, i, k) = 1.0;
-					else
-						mat(j, i, k) = 0.0;
-				}
-		return mat;
-	}
-	static Matrix Ones(const int &h, const int &w, const int &d)
-	{
-		Matrix mat(h, w, d);
-		for (int i = 0; i < w*h*d; i++)
-			mat.matrix[i] = 1.0;
-		return mat;
-	}
-	Matrix block(const int &i, const int &j, const int &k, const int &h, const int &w, const int &d) const
-	//:summary:截取
-	{
-		if (i + h > height || j + w > width)
-		{
-			cout << "Matrix: block: out of range" << endl;
-			throw  out_of_range("access out of range element");
-		}
-		Matrix mat(h, w, d);
-		for (int r = k; r < k + d; r++)
-			for (int p = i; p < i + h; p++)
-				for (int q = j; q < j + w; q++)
-					mat(p - i, q - j, r - k) = (*this)(p, q, r);
-		return mat;
-	}
-	double convolute(const Matrix &kernel, const int &x, const int &y) const
+	double dot(const Matrix &kernel, const int &row, const int &col, const int &y, const int &x) const
 	//:param kernel: 卷积核
-	//:param x,y,z: 卷积中心
-	//:return: 卷积值
+	//:param row: 卷积核Matix行数
+	//:param col: 输入Matix列数
+	//:param y, x: 卷积中心列、行数
 	{
-		if (x + kernel.height > height || y + kernel.width > width)
+		if (height != kernel.width)
 		{
-			cout << "Matrix: convolute: kernel will out of map" << endl;
-			throw  out_of_range("access out of range element");
-		}
-		if (kernel.depth != 1 || depth != 1)
-		{
-			cout << "Matrix: convolute: depth not match" << endl;
-			throw  invalid_argument("arguments not match");
-		}
-		double sum = 0;
-		for (int i = 0; i < kernel.height; i++)
-			for (int j = 0; j < kernel.width; j++)
-				sum += (*this)(x + i, y + j, 0) * kernel(i, j, 0);
-		return sum;
-	}
-	double convolute2(const Matrix &kernel, const int &x, const int &y) const
-	//:param kernel: 卷积核
-	//:param x,y,z: 卷积中心
-	//:return: 卷积值
-	{
-		if (x<-kernel.height + 1 || y<-kernel.width + 1 || x>height - 1 || y>width - 1)
-		{
-			cout << "Matrix: convolute2: kernel will out of map" << endl;
-			throw  out_of_range("access out of range element");
-		}
-		if (kernel.depth != 1 || depth != 1)
-		{
-			cout << "Matrix: convolute: depth not match" << endl;
-			throw  invalid_argument("arguments not match");
+			cout << height << " " << kernel.width;
+			cout << "Matrix: dot: row size not match with column size" << endl;
+			throw exception();
 		}
 		double sum = 0.0;
-		for(int i=0;i<kernel.height;i++)
-			for (int j = 0; j < kernel.width; j++)
-			{
-				if (x + i<0 || y + j<0 || x + i>height - 1 || y + j>width - 1)
-					continue;
-				sum += kernel(i, j, 0)*(*this)(x + i, y + j, 0);
-			}
+		for (int i = 0; i < width; i++)
+			sum += (*this)(i, col).convolute(kernel(row, i), y, x);
 		return sum;
 	}
-	Matrix rotation()
-	//:summary:卷积核旋转180度
+	void multiply(const double &d)
 	{
-		if (depth != 1)
-		{
-			cout << "Matrix: rotation: not kernel";
-			throw  invalid_argument("arguments not match");
-		}
-		int i = 0, j = height*width - 1;
-		double temp;
-		while (i < j)
-		{
-			temp = matrix[i];
-			matrix[i] = matrix[j];
-			matrix[j] = temp;
-			i++;
-			j--;
-		}
-		return *this;
+		for (int i = 0; i < height*width; i++)
+			matrix[i].multiply(d);
 	}
-	Matrix transpose() const
+	void clear()
 	{
-		Matrix mat(width, height, depth);
-		for(int k=0;k<depth;k++)
-			for(int j=0;j<height;j++)
-				for (int i = 0; i < width; i++)
-				{
-					mat(i, j, k) = (*this)(j, i, k);
-				}
-		return mat;
+		for (int i = 0; i < width*height; i++)
+			matrix[i].clear();
 	}
-	Matrix sigmoid_all()
-	{
-		for (int k = 0; k < depth; k++)
-			for (int j = 0; j < height; j++)
-				for (int i = 0; i < width; i++)
-					(*this)(j, i, k) = sigmoid((*this)(j, i, k));
-		return *this;
-	}
+	friend ostream &operator<<(ostream &os, const Matrix &mat);
 	int get_height() const
 	{
 		return height;
@@ -213,33 +272,29 @@ public:
 	{
 		return width;
 	}
-	int get_depth() const
+	Size get_size() const
 	{
-		return depth;
+		return size;
 	}
+	friend bool same_size(const Matrix &mat1, const Matrix &mat2);
 protected:
-	void copy_data(const Matrix &mat)
+	void copy_data(const Matrix &m)
 	{
-		if (mat.height == 0 || mat.width == 0)
-		{
-			height = 0;
-			width = 0;
-			depth = 0;
+		height = m.height;
+		width = m.width;
+		size = m.size;
+		if (height == 0 || width == 0)
 			matrix = 0;
-		}
 		else
 		{
-			height = mat.height;
-			width = mat.width;
-			depth = mat.depth;
-			matrix = new double[height*width*depth];
-			for (int i = 0; i < height*width*depth; i++)
-				matrix[i] = mat.matrix[i];
+			matrix = new Map[height*width];
+			for (int i = 0; i < height*width; i++)
+				matrix[i] = m.matrix[i];
 		}
 	}
 private:
 	int height;
 	int width;
-	int depth;
-	double *matrix;
+	Size size;
+	Map *matrix;
 };
