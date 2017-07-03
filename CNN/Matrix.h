@@ -5,8 +5,8 @@
 #include <time.h>
 using namespace std;
 
-double sigmoid(const double &x);
-double dsigmoid(const double &x);
+double activation(const double &x);
+double d_activation(const double &x);
 
 class Size
 {
@@ -31,6 +31,8 @@ public:
 	int width;
 	int height;
 };
+
+bool same_size(const Size &size1, const Size &size2);
 
 class Map
 {
@@ -203,7 +205,7 @@ public:
 	static Matrix Random(const Size &s, const int &h, const int &w)
 	{
 		Matrix mat;
-		srand(unsigned(time(0)));
+		//srand(unsigned(time(0)));
 		mat.size = s;
 		mat.height = h;
 		mat.width = w;
