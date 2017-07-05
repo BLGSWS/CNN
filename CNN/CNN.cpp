@@ -1,104 +1,17 @@
 #include<iostream>
 #include<fstream>
 #include<time.h>
-#include "Layers.h"
+#include "CNN.h"
+#include "Input.h"
 //#define DEBUG
-//#define MNIST
+#define MNIST
+#define OPENCV
 using namespace std;
 
-double get_error(const Matrix &target, const Matrix &output)
-{
-	double error = 0.0;
-	for (int i = 0; i < target.get_height(); i++)
-		for (int j = 0; j < target.get_width(); j++)
-			for (int m = 0; m < target.get_size().height; m++)
-				for (int n = 0; n < target.get_size().width; n++)
-				{
-					double e = (target(i, j).value(m, n) - output(i, j).value(m, n));
-					error += e*e;
-				}
-	return error;
-}
-
-Conv_layer layer1 = Conv_layer(Size(2, 2), Size(3, 3), 1, 2, 1);
-Output_layer layer2 = Output_layer(Size(2, 2), 2, 3);
-
-void train(const Matrix &input, const Matrix &target, const double &stride)
-{
-	layer1.feed_forward(input);
-	layer2.feed_forward(layer1.output_mat);
-	layer2.get_residual(target);
-	layer2.post_propagate(layer1.output_mat, layer1.residual_mat);
-	layer2.change_weight(layer1.output_mat, 0.2);
-	layer1.change_weight(input, 0.2);
-	//cout << rd_mat << endl << rd_mat1;
-	cout << "error: " << get_error(target, layer2.output_mat) << endl;
-}
-
-Matrix& predict(const Matrix &input)
-{
-	layer1.feed_forward(input);
-	layer2.feed_forward(layer1.output_mat);
-	return layer2.output_mat;
-}
-
 #ifdef MNIST
-static int COUNT = 1;
-static double ERROR = 10.0;
-double STRIDE = 0.1;
+Matrix input = Matrix(Size(32, 32), 1, 1);
+CNN cnn;
 
-double stride_array[10] = { 10, 0.5, 0.2, 0.1, 0.07, 0.05, 0.04, 0.025, 0.02, 0.01 };
-
-Matrix input = Matrix(Size(28, 28), 1, 1);
-Conv_layer layer1 = Conv_layer(Size(5, 5), Size(28, 28), 1, 6, 1);
-Pool_layer layer2 = Pool_layer(Size(2, 2), Size(24, 24), 6);
-Conv_layer layer3 = Conv_layer(Size(5, 5), Size(12, 12), 6, 12, 1);
-Pool_layer layer4 = Pool_layer(Size(2, 2), Size(8, 8), 12);
-Conv_layer layer5 = Conv_layer(Size(4, 4), Size(4, 4), 12, 10, 1);
-
-int select(const Matrix &result)
-{
-	double max = 0.0;
-	int number = 0;
-	for (int i = 0; i < result.get_height(); i++)
-		if (result(i, 0).value(0, 0) > max)
-		{
-			number = i;
-			max = result(i, 0).value(0, 0);
-		}
-	return number;
-}
-
-void train(const Matrix &input, const Matrix &target, const double &stride)
-{
-	Matrix output1 = layer1.get_output(input);
-	Matrix output2 = layer2.get_output(output1);
-	Matrix output3 = layer3.get_output(output2);
-	Matrix output4 = layer4.get_output(output3);
-	Matrix output5 = layer5.get_output(output4);
-	layer5.residual_mat = layer5.get_residual(target);
-	ERROR += get_error(target, output5);
-	layer5.post_propagate(output4, layer4.residual_mat);
-	layer4.post_propagate(output3, layer3.residual_mat);
-	layer3.post_propagate(output2, layer2.residual_mat);
-	layer2.post_propagate(output1, layer1.residual_mat);
-	layer5.change_weight(output4, 0.01);
-	layer4.change_weight(output3, 0.01);
-	layer3.change_weight(output2, 0.01);
-	layer2.change_weight(output1, 0.01);
-	layer1.change_weight(input, 0.01);
-	COUNT++;
-}
-
-Matrix predict(const Matrix &input)
-{
-	Matrix output1 = layer1.get_output(input);
-	Matrix output2 = layer2.get_output(output1);
-	Matrix output3 = layer3.get_output(output2);
-	Matrix output4 = layer4.get_output(output3);
-	Matrix output5 = layer5.get_output(output4);
-	return output5;
-}
 #endif
 
 int main()
@@ -127,21 +40,20 @@ int main()
 	layer1.post_propagate(input, rd_mat4, 1);
 #endif
 #ifdef MNIST
+	cnn.add_Conv_layer(Size(5, 5), Size(32, 32), 1, 6, 1);
+	cnn.add_Pool_layer(Size(2, 2), Size(28, 28), 6);
+	cnn.add_Conv_layer(Size(5, 5), Size(14, 14), 6, 16, 1);
+	cnn.add_Pool_layer(Size(2, 2), Size(10, 10), 16);
+	cnn.add_Conv_layer(Size(5, 5), Size(5, 5), 16, 120, 1);
+	cnn.add_Output_layer(Size(1, 1), 120, 10);
 	string str;
 	for (int i = 0; i < 100; i++)
 	{
-		if (ERROR / 100 < 0.01)
-			break;
 		int k = 0;
-		if (i < 20)
-			STRIDE = stride_array[10 % (i / 2 + 1) - 1];
-		else
-			STRIDE = 0.1;
 		fstream file("train.csv");
-		ERROR = 0.0;
 		while (getline(file, str))
 		{
-			if (k > 99)
+			if (k > 3)
 				break;
 			string::size_type j = 0;
 			//跳过第一行
@@ -157,13 +69,15 @@ int main()
 					if (num == 0)
 						target(stoi(value), 0).value(0, 0) = 1.0;
 					else
-						input(0, 0).value((num - 1) / 28, (num - 1) % 28) = stod(value) / 255.0;
+						input(0, 0).value((num - 1) / 28 + 2, (num - 1) % 28 + 2) = stod(value) / 255.0;
 					num++;
 				}
-			train(input, target, STRIDE);
-			if (k % 100 == 2)
-				cout << "training error: " << ERROR/100 << endl;
+			cnn.train(input, target, 0.01);
+			cnn.grad_check(target);
+			cout << cnn.get_layer(5).grads << endl;
+			target.clear();
 			k++;
+			//cout << cnn.get_error(cnn.get_output(), target) << " " << cnn.get_avg_error() << endl;
 		}
 		file.close();
 	}
@@ -171,6 +85,8 @@ int main()
 	int n = 0;
 	while (getline(file, str))
 	{
+		if (n > 3)
+			break;
 		string::size_type j = 0;
 		//跳过第一行
 		if (isalpha(str[0]))
@@ -187,14 +103,12 @@ int main()
 					input(0, 0).value((num - 1) / 28, (num - 1) % 28) = stod(value) / 255.0;
 				num++;
 			}
-		Matrix result = predict(input);
-		cout << select(result) << endl;
-		if (n > 40)
-			break;
+		Matrix result = cnn.predict(input);
+		cout << cnn.select(result) << endl;
 		n++;
 	}
 #endif
-	Matrix input1 = Matrix::Ones(Size(3, 3), 1, 1);
+	/*Matrix input1 = Matrix::Ones(Size(3, 3), 1, 1);
 	Matrix input2 = Matrix(Size(3, 3), 1, 1);
 	Matrix input3 = Matrix(Size(3, 3), 1, 1);
 	Matrix target1 = Matrix(Size(1, 1), 3, 1);
@@ -207,14 +121,17 @@ int main()
 	target1(0, 0).value(0, 0) = 1.0;
 	target2(1, 0).value(0, 0) = 1.0;
 	target3(2, 0).value(0, 0) = 1.0;
+	CNN cnn;
+	cnn.add_Conv_layer(Size(2, 2), Size(3, 3), 1, 2, 1);
+	cnn.add_Output_layer(Size(2, 2), 2, 3);
 	for (int i = 0; i < 1000; i++)
 	{
-		train(input1, target1, 0.1);
-		train(input2, target2, 0.2);
-		train(input3, target3, 0.1);
+		cnn.train(input1, target1, 0.2);
+		cnn.train(input2, target2, 0.2);
+		cnn.train(input3, target3, 0.2);
 	}
-	cout << predict(input1) << endl;
-	cout << predict(input2) << endl;
-	cout << predict(input3) << endl;
+	cout << cnn.predict(input1) << endl;
+	cout << cnn.predict(input2) << endl;
+	cout << cnn.predict(input3) << endl;*/
 	system("pause");
 }

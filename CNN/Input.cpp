@@ -1,5 +1,6 @@
+#ifdef OPENCV
 #include <iostream>
-#include "Layers.h"
+#include "Input.h"
 
 IplImage* Pre_treat::resize(const string &picname)
 {
@@ -145,3 +146,4 @@ Matrix Input_layer::B_channel_output(const string &path)
 		}
 	return mat;
 }
+#endif

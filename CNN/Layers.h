@@ -1,52 +1,7 @@
 #pragma once
-#include <opencv2/core/core.hpp>
-#include <opencv2/opencv.hpp>//cvResize
-#include <fstream>
 #include <string>
 #include "Matrix.h"
 using namespace std;
-
-class Pre_treat
-{
-public:
-	Pre_treat()
-	{
-		size.width = 64;
-		size.height = 64;
-		filepath = "pic";
-	}
-	void set_size(const int &width, const int &height)
-	{
-		size.width = width;
-		size.height = height;
-	}
-	void set_path(const string &path)
-	{
-		filepath = path;
-	}
-	IplImage* resize(const string &picname);
-	void read_by_list();
-private:
-	CvSize size;
-	string filepath;
-};
-
-class Input_layer
-{
-public:
-	Input_layer(const Size &s)
-	{
-		size = s;
-		mat = Matrix(s, 1, 1);
-	}
-	Matrix R_channel_output(const string &path);
-	Matrix G_channel_output(const string &path);
-	Matrix B_channel_output(const string &path);
-	Matrix gray_channel_output(const string &path);
-private:
-	Size size;
-	Matrix mat;
-};
 
 class Layer
 {
@@ -55,6 +10,10 @@ public:
 	virtual void feed_forward(const Matrix &input) = 0;
 	virtual void post_propagate(const Matrix &input, Matrix &rd_mat) = 0;
 	virtual void change_weight(const Matrix &input, const double &stride) = 0;
+	virtual void output_layer_residual(const Matrix &target) = 0;
+	virtual Matrix& get_output() = 0;
+	virtual Matrix& get_residual() = 0;
+	Matrix grads;
 };
 
 class Conv_layer: public Layer
@@ -82,13 +41,9 @@ public:
 		int o_height = (i_size.height - k_size.height) / step + 1;
 		output_size = Size(o_width, o_height);
 		output_mat = residual_mat = Matrix(output_size, o_num, 1);
+		grads = Matrix(output_size, o_num, 1);
 		threshold_mat = Matrix(Size(1, 1), o_num, 1);
 		this->step = step;
-	}
-	static Conv_layer Network_layer(const int &i_num, const int &o_num)
-	{
-		Conv_layer layer(Size(1, 1), Size(1, 1), i_num, o_num, 1);
-		return layer;
 	}
 	virtual void feed_forward(const Matrix &input)
 	{
@@ -140,6 +95,18 @@ public:
 			threshold_mat(i, 0).value(0, 0) += residual_mat(i, 0).norm()*stride;
 		residual_mat.clear();
 	}
+	virtual Matrix& get_output()
+	{
+		return output_mat;
+	}
+	virtual Matrix& get_residual()
+	{
+		return residual_mat;
+	}
+	virtual void output_layer_residual(const Matrix &target)
+	{
+		throw exception();
+	}
 	Matrix& get_kernel()
 	{
 		return kernel_mat;
@@ -148,9 +115,9 @@ public:
 	{
 		return threshold_mat;
 	}
+protected:
 	Matrix output_mat;
 	Matrix residual_mat;
-protected:
 	Size input_size;
 	Matrix kernel_mat;
 	Matrix threshold_mat;
@@ -176,8 +143,9 @@ public:
 		output_size = Size(input_size.height / kernel_size.height, input_size.width / kernel_size.width);
 		output_mat = residual_mat = Matrix(output_size, o_num, 1);
 		threshold_mat = Matrix(Size(1, 1), o_num, 1);
+		grads = Matrix(output_size, o_num, 1);
 	}
-	virtual void get_output(const Matrix &input)
+	virtual void feed_forward(const Matrix &input)
 	{
 		if (input.get_height() != output_num)
 		{
@@ -209,9 +177,25 @@ public:
 					post_rd(i, 0).value(m, n) += dif*d_activation(input(i, 0).value(m, n)) / kernel_size.height / kernel_size.width;
 				}
 	}
+	virtual Matrix& get_output()
+	{
+		return output_mat;
+	}
+	virtual Matrix& get_residual()
+	{
+		return residual_mat;
+	}
+	virtual void output_layer_residual(const Matrix &target)
+	{
+		throw exception();
+	}
+	Matrix & get_threshold()
+	{
+		return threshold_mat;
+	}
+private:
 	Matrix residual_mat;
 	Matrix output_mat;
-private:
 	Size kernel_size;
 	Size input_size;
 	Size output_size;
@@ -231,13 +215,9 @@ public:
 		kernel_mat = Matrix(i_size, o_num, i_num);
 		output_mat = residual_mat = Matrix(Size(1, 1), o_num, 1);
 		threshold_mat = Matrix(Size(1, 1), o_num, 1);
+		grads = Matrix(Size(1, 1), o_num, 1);
 	}
-	static Output_layer Network_output(const int &i_num, const int &o_num)
-	{
-		Output_layer layer(Size(1, 1), i_num, o_num);
-		return layer;
-	}
-	void get_residual(const Matrix &targets)
+	virtual void output_layer_residual(const Matrix &targets)
 	{
 		if (!same_size(targets, output_mat) || targets.get_width() != 1)
 		{
