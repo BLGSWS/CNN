@@ -13,7 +13,9 @@ public:
 	virtual void output_layer_residual(const Matrix &target) = 0;
 	virtual Matrix& get_output() = 0;
 	virtual Matrix& get_residual() = 0;
+#ifdef GRAD_CHECK
 	Matrix grads;
+#endif
 };
 
 class Conv_layer: public Layer
@@ -41,14 +43,18 @@ public:
 		int o_height = (i_size.height - k_size.height) / step + 1;
 		output_size = Size(o_width, o_height);
 		output_mat = residual_mat = Matrix(output_size, o_num, 1);
+#ifdef GRAD_CHECK
 		grads = Matrix(output_size, o_num, 1);
+#endif
 		threshold_mat = Matrix(Size(1, 1), o_num, 1);
 		this->step = step;
 	}
-	virtual void feed_forward(const Matrix &input)
+	void feed_forward(const Matrix &input)
 	{
 		if (input.get_height() != input_num || !same_size(input.get_size(), input_size))
 		{
+			cout << input << endl;
+			cout << input_num << " " << input_size.width << " " << input_size.height;
 			cout << "Conv_layer: get_output: not match input map" << endl;
 			throw exception();
 		}
@@ -63,7 +69,7 @@ public:
 				}
 	}
 
-	virtual void post_propagate(const Matrix &input, Matrix &post_rd)
+	void post_propagate(const Matrix &input, Matrix &post_rd)
 	{
 		if (!same_size(input, post_rd))
 		{
@@ -80,7 +86,7 @@ public:
 				}
 	}
 
-	virtual void change_weight(const Matrix &input, const double &stride)
+	void change_weight(const Matrix &input, const double &stride)
 	{
 		if (input.get_height() != input_num || !same_size(input.get_size(), input_size))
 		{
@@ -95,17 +101,26 @@ public:
 			threshold_mat(i, 0).value(0, 0) += residual_mat(i, 0).norm()*stride;
 		residual_mat.clear();
 	}
-	virtual Matrix& get_output()
+	void output_layer_residual(const Matrix &targets)
+	{
+		if (!same_size(targets, output_mat))
+		{
+			cout << "Conv_layer: get_residual: not formal targets" << endl;
+			throw exception();
+		}
+		for (int i = 0; i < targets.get_height(); i++)
+			for (int m = 0; m < targets.get_size().height; m++)
+				for (int n = 0; n < targets.get_size().width; n++)
+					residual_mat(i, 0).value(m, n)
+					= d_activation(output_mat(i, 0).value(m, n))*(output_mat(i, 0).value(m, n) - targets(i, 0).value(m, n));
+	}
+	Matrix& get_output()
 	{
 		return output_mat;
 	}
-	virtual Matrix& get_residual()
+	Matrix& get_residual()
 	{
 		return residual_mat;
-	}
-	virtual void output_layer_residual(const Matrix &target)
-	{
-		throw exception();
 	}
 	Matrix& get_kernel()
 	{
@@ -143,9 +158,11 @@ public:
 		output_size = Size(input_size.height / kernel_size.height, input_size.width / kernel_size.width);
 		output_mat = residual_mat = Matrix(output_size, o_num, 1);
 		threshold_mat = Matrix(Size(1, 1), o_num, 1);
+#ifdef GRAD_CHECK
 		grads = Matrix(output_size, o_num, 1);
+#endif
 	}
-	virtual void feed_forward(const Matrix &input)
+	void feed_forward(const Matrix &input)
 	{
 		if (input.get_height() != output_num)
 		{
@@ -160,14 +177,14 @@ public:
 					output_mat(k, 0).value(i, j) = activation(output);
 				}
 	}
-	virtual void change_weight(const Matrix &input, const double &stride)
+	void change_weight(const Matrix &input, const double &stride)
 	{
 		//ãÐÖµµ÷Õû
 		for (int i = 0; i < output_num; i++)
 			threshold_mat(i, 0).value(0, 0) += residual_mat(i, 0).norm();
 		residual_mat.clear();
 	}
-	virtual void post_propagate(const Matrix &input, Matrix &post_rd)
+	void post_propagate(const Matrix &input, Matrix &post_rd)
 	{
 		for (int i = 0; i < post_rd.get_height(); i++)
 			for (int m = 0; m < input_size.height; m++)
@@ -177,17 +194,17 @@ public:
 					post_rd(i, 0).value(m, n) += dif*d_activation(input(i, 0).value(m, n)) / kernel_size.height / kernel_size.width;
 				}
 	}
-	virtual Matrix& get_output()
+	void output_layer_residual(const Matrix &targets)
+	{
+		throw exception();
+	}
+	Matrix& get_output()
 	{
 		return output_mat;
 	}
-	virtual Matrix& get_residual()
+	Matrix& get_residual()
 	{
 		return residual_mat;
-	}
-	virtual void output_layer_residual(const Matrix &target)
-	{
-		throw exception();
 	}
 	Matrix & get_threshold()
 	{
@@ -202,30 +219,4 @@ private:
 	Matrix kernel_mat;
 	Matrix threshold_mat;
 	int output_num;
-};
-
-class Output_layer :public Conv_layer
-{
-public:
-	Output_layer(const Size &i_size, const int &i_num, const int &o_num)
-	{
-		input_size = kernel_size = i_size;
-		output_num = o_num;
-		input_num = i_num;
-		kernel_mat = Matrix(i_size, o_num, i_num);
-		output_mat = residual_mat = Matrix(Size(1, 1), o_num, 1);
-		threshold_mat = Matrix(Size(1, 1), o_num, 1);
-		grads = Matrix(Size(1, 1), o_num, 1);
-	}
-	virtual void output_layer_residual(const Matrix &targets)
-	{
-		if (!same_size(targets, output_mat) || targets.get_width() != 1)
-		{
-			cout << "Conv_layer: get_residual: not formal targets" << endl;
-			throw exception();
-		}
-		for (int i = 0; i < targets.get_height(); i++)
-			residual_mat(i, 0).value(0, 0)
-			= d_activation(output_mat(i, 0).value(0, 0))*(output_mat(i, 0).value(0, 0) - targets(i, 0).value(0, 0));
-	}
 };

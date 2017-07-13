@@ -3,9 +3,10 @@
 #include<time.h>
 #include "CNN.h"
 #include "Input.h"
-//#define DEBUG
-#define MNIST
-#define OPENCV
+#define DEBUG
+//#define MNIST
+//#define OPENCV//对图片的预处理，依赖openCV
+//#define GRAD_CHECK//梯度检查
 using namespace std;
 
 #ifdef MNIST
@@ -17,27 +18,32 @@ CNN cnn;
 int main()
 {
 #ifdef DEBUG
-	Matrix input = Matrix::Identity(Size(10, 10), 1, 1);
-	Conv_layer layer1 = Conv_layer(Size(5, 5), Size(10, 10), 1, 6, 1);
-	Matrix output1 = layer1.get_output(input);
-	cout << "output1 & input2:" << endl << output1;
-	Pool_layer layer2 = Pool_layer(Size(2, 2), Size(6, 6), 6);
-	Matrix output2 = layer2.get_output(output1);
-	cout << "output2 & input3:" << endl << output2;
-	Conv_layer layer3 = Conv_layer(Size(2, 2), Size(3, 3), 6, 12, 1);
-	Matrix output3 = layer3.get_output(output2);
-	cout << "output3 & input4:" << endl << output3;
-	Output_layer layer4 = Output_layer(Size(2, 2), 12, 10);
-	Matrix output4 = layer4.get_output(output3);
-	cout << "final output:" << endl << output4;
-	Matrix target = Matrix(Size(1, 1), 10, 1);
-	target(0, 0).value(0, 0) = 1.0;
-	cout << target;
-	Matrix rd_mat1 = layer4.get_residual(target);
-	Matrix rd_mat2 = layer4.post_propagate(output3, rd_mat1, 1);
-	Matrix rd_mat3 = layer3.post_propagate(output2, rd_mat2, 1);
-	Matrix rd_mat4 = layer2.post_propagate(output1, rd_mat3, 1);
-	layer1.post_propagate(input, rd_mat4, 1);
+	Matrix input1 = Matrix::Ones(Size(5, 5), 1, 1);
+	Matrix input2 = Matrix(Size(5, 5), 1, 1);
+	Matrix input3 = Matrix(Size(5, 5), 1, 1);
+	Matrix target1 = Matrix(Size(1, 1), 3, 1);
+	Matrix target2 = Matrix(Size(1, 1), 3, 1);
+	Matrix target3 = Matrix(Size(1, 1), 3, 1);
+	input1(0, 0).value(1, 2) = 0.0;
+	input2(0, 0).value(2, 1) = 1.0;
+	input3(0, 0).value(0, 0) = input3(0, 0).value(1, 0) = input3(0, 0).value(1, 1)
+		= input3(0, 0).value(2, 0) = input3(0, 0).value(2, 1) = 1.0;
+	target1(0, 0).value(0, 0) = 1.0;
+	target2(1, 0).value(0, 0) = 1.0;
+	target3(2, 0).value(0, 0) = 1.0;
+	CNN cnn;
+	cnn.add_Conv_layer(Size(2, 2), Size(5, 5), 1, 2, 1);
+	cnn.add_Pool_layer(Size(2, 2), Size(4, 4), 2);
+	cnn.add_Output_layer(Size(2, 2), 2, 3);
+	for (int i = 0; i < 100; i++)
+	{
+		cnn.train(input1, target1, 0.1);
+		cnn.train(input2, target2, 0.1);
+		cnn.train(input3, target3, 0.1);
+	}
+	//cout << cnn.predict(input1) << endl;
+	//cout << cnn.predict(input2) << endl;
+	//cout << cnn.predict(input3) << endl;
 #endif
 #ifdef MNIST
 	cnn.add_Conv_layer(Size(5, 5), Size(32, 32), 1, 6, 1);
@@ -73,7 +79,6 @@ int main()
 					num++;
 				}
 			cnn.train(input, target, 0.01);
-			cnn.grad_check(target);
 			cout << cnn.get_layer(5).grads << endl;
 			target.clear();
 			k++;
@@ -108,30 +113,5 @@ int main()
 		n++;
 	}
 #endif
-	/*Matrix input1 = Matrix::Ones(Size(3, 3), 1, 1);
-	Matrix input2 = Matrix(Size(3, 3), 1, 1);
-	Matrix input3 = Matrix(Size(3, 3), 1, 1);
-	Matrix target1 = Matrix(Size(1, 1), 3, 1);
-	Matrix target2 = Matrix(Size(1, 1), 3, 1);
-	Matrix target3 = Matrix(Size(1, 1), 3, 1);
-	input1(0, 0).value(1, 2) = 0.0;
-	input2(0, 0).value(2, 1) = 1.0;
-	input3(0, 0).value(0, 0) = input3(0, 0).value(1, 0) = input3(0, 0).value(1, 1)
-		= input3(0, 0).value(2, 0) = input3(0, 0).value(2, 1) = 1.0;
-	target1(0, 0).value(0, 0) = 1.0;
-	target2(1, 0).value(0, 0) = 1.0;
-	target3(2, 0).value(0, 0) = 1.0;
-	CNN cnn;
-	cnn.add_Conv_layer(Size(2, 2), Size(3, 3), 1, 2, 1);
-	cnn.add_Output_layer(Size(2, 2), 2, 3);
-	for (int i = 0; i < 1000; i++)
-	{
-		cnn.train(input1, target1, 0.2);
-		cnn.train(input2, target2, 0.2);
-		cnn.train(input3, target3, 0.2);
-	}
-	cout << cnn.predict(input1) << endl;
-	cout << cnn.predict(input2) << endl;
-	cout << cnn.predict(input3) << endl;*/
 	system("pause");
 }

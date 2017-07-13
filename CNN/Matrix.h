@@ -7,6 +7,7 @@ using namespace std;
 
 double activation(const double &x);
 double d_activation(const double &x);
+double anti_activation(const double &x);
 
 class Size
 {

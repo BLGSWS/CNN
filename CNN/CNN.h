@@ -2,6 +2,7 @@
 #include<vector>
 #include"Input.h"
 #include"Layers.h"
+#include"Matrix.h"
 class CNN
 {
 public:
@@ -27,7 +28,7 @@ public:
 	}
 	void add_Output_layer(const Size &i_size, const int &i_num, const int &o_num)
 	{
-		Layer *layer = new Output_layer(i_size, i_num, o_num);
+		Layer *layer = new Conv_layer(i_size, i_size, i_num, o_num, 1);
 		layers.push_back(layer);
 	}
 	void add_Pool_layer(const Size &k_size, const Size &i_size, const int &o_num)
@@ -42,7 +43,7 @@ public:
 	}
 	void add_Network_output(const int &i_num, const int &o_num)
 	{
-		Layer *layer = new Output_layer(Size(1, 1), i_num, o_num);
+		Layer *layer = new Conv_layer(Size(1, 1), Size(1, 1), i_num, o_num, 1);
 		layers.push_back(layer);
 	}
 	void train(const Matrix &input, const Matrix &target, const double &stride)
@@ -62,6 +63,10 @@ public:
 				(*it)->output_layer_residual(target);
 			(*it)->post_propagate((*(it - 1))->get_output(), (*(it - 1))->get_residual());
 		}
+		//梯度检查
+#ifdef GRAD_CHECK
+		grad_check(target);
+#endif
 		//权重调整
 		for (vector<Layer*>::iterator it = layers.begin(); it != layers.end(); it++)
 		{
@@ -121,34 +126,49 @@ public:
 	{
 		return (*(layers.end() - 1))->get_output();
 	}
+#ifdef GRAD_CHECK
 	void grad_check(const Matrix &target)
 	{
-		vector<Layer*>::iterator it = layers.end() - 1;
-		Matrix mat = (*it)->get_output();
-		for(int i=0;i<mat.get_height();i++)
-			for(int m=0;m<mat.get_size().height;m++)
-				for (int n = 0; n < mat.get_size().width; n++)
-				{
-					mat(i, 0).value(m, n) += 0.0001;
-					vector<Layer*>::iterator temp = it;
-					while (temp != layers.end())
+		for (vector<Layer*>::iterator it = layers.begin(); it != layers.end(); it++)
+		{
+			bool flag = true;//是否通过梯度检查
+			for (int i = 0; i<(*it)->get_output().get_height(); i++)
+				for (int m = 0; m<(*it)->get_output().get_size().height; m++)
+					for (int n = 0; n < (*it)->get_output().get_size().width; n++)
 					{
-						(*temp)->feed_forward((*(temp - 1))->get_output());
-						temp++;
+						double value = (*it)->get_output()(i, 0).value(m, n);
+						(*it)->get_output()(i, 0).value(m, n) = activation(anti_activation(value) + 0.00001);
+						vector<Layer*>::iterator p = it + 1;
+						while (p != layers.end())
+						{
+							(*p)->feed_forward((*(p - 1))->get_output());
+							p++;
+						}
+						double e1 = get_error(get_output(), target);
+						(*it)->get_output()(i, 0).value(m, n) = activation(anti_activation(value) - 0.00001);
+						p = it + 1;
+						while (p != layers.end())
+						{
+							(*p)->feed_forward((*(p - 1))->get_output());
+							p++;
+						}
+						double e2 = get_error(get_output(), target);
+						double detal = (e1 - e2) / 0.00002 - (*it)->get_residual()(i, 0).value(m, n);
+						(*it)->grads(i, 0).value(m, n) = detal;
+						if (detal > 0.0001)
+						{
+							flag = false;
+						}
+						(*it)->get_output()(i, 0).value(m, n) = value;
 					}
-					double e1 = get_error(get_output(), target);
-					mat(i, 0).value(m, n) -= 0.0002;
-					temp = it;
-					while (temp != layers.end())
-					{
-						(*temp)->feed_forward((*(temp - 1))->get_output());
-						temp++;
-					}
-					double e2 = get_error(get_output(), target);
-					(*it)->grads(i, 0).value(m, n) = (e1 - e2) / 0.0002;
-					mat(i, 0).value(m, n) += 0.0001;
-				}
+			if (flag == false)
+			{
+				cout << (*it)->grads;
+				system("pause");
+			}
+		}
 	}
+#endif
 	Layer& get_layer(const int &i)
 	{
 		return *(layers[i]);

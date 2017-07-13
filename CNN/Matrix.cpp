@@ -2,6 +2,7 @@
 
 double sigmoid(const double &x);
 double d_sigmoid(const double &x);
+double anti_sigmoid(const double &x);
 double tanh(const double &x);
 double d_tanh(const double &x);
 
@@ -53,6 +54,11 @@ double d_activation(const double &x)
 	return d_sigmoid(x);
 }
 
+double anti_activation(const double &x)
+{
+	return anti_sigmoid(x);
+}
+
 double sigmoid(const double &x)
 {
 	return 1.0 / (1.0 + exp(-x));
@@ -78,4 +84,9 @@ double d_tanh(const double &x)
 double softmax(const double &x)
 {
 	return 0.0;
+}
+
+double anti_sigmoid(const double &x)
+{
+	return -log(1.0 / x - 1.0);
 }
