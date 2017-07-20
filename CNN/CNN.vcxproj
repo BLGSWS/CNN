@@ -127,6 +127,8 @@
   <ItemGroup>
     <ClCompile Include="CNN.cpp" />
     <ClCompile Include="Input.cpp" />
+    <ClCompile Include="Layers.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Matrix.cpp" />
   </ItemGroup>
   <ItemGroup>
