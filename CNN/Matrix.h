@@ -76,8 +76,11 @@ public:
 	{
 		copy_data(m);
 	}
-	Map operator=(const Map &m)
+	Map& operator=(const Map &m)
 	{
+		if (this == &m) return *this;
+		delete[] map;
+		map = 0;
 		copy_data(m);
 		return *this;
 	}
@@ -136,8 +139,11 @@ public:
 	{
 		copy_data(mat);
 	}
-	Matrix operator=(const Matrix &mat)
+	Matrix& operator=(const Matrix &mat)
 	{
+		if (this == &mat) return *this;
+		delete[] matrix;
+		matrix = 0;
 		copy_data(mat);
 		return *this;
 	}

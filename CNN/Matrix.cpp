@@ -85,32 +85,32 @@ ActivationFactory::ActivationFactory()
 
 Activation::~Activation() {}
 
-double Sigmoid::activation(const double &x)
+inline double Sigmoid::activation(const double &x)
 {
 	return 1.0 / (1.0 + exp(-x));
 }
 
-double Sigmoid::anti_activation(const double &x)
+inline double Sigmoid::anti_activation(const double &x)
 {
 	return -log(1.0 / x - 1.0);
 }
 
-double Sigmoid::d_activation(const double &x)
+inline double Sigmoid::d_activation(const double &x)
 {
 	return x*(1.0 - x);
 }
 
-double Tanh::activation(const double &x)
+inline double Tanh::activation(const double &x)
 {
 	return atan(x);
 }
 
-double Tanh::anti_activation(const double &x)
+inline double Tanh::anti_activation(const double &x)
 {
 	return tan(x);
 }
 
-double Tanh::d_activation(const double &x)
+inline double Tanh::d_activation(const double &x)
 {
 	return 1.0 / (x*x + 1.0);
 }
@@ -254,7 +254,7 @@ Matrix Matrix::Ones(const Size &s, const int &h, const int &w)
 Matrix Matrix::Random(const Size &s, const int &h, const int &w)
 {
 	Matrix mat;
-	//srand(unsigned(time(0)));
+	srand(unsigned(time(0)));
 	mat.size = s;
 	mat.height = h;
 	mat.width = w;

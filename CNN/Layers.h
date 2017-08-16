@@ -48,7 +48,7 @@ public:
 	{
 		return af.act;
 	}
-protected:
+private:
 	ActivationFactory af;
 	Matrix output_mat;
 	Matrix residual_mat;
@@ -59,7 +59,6 @@ protected:
 	int output_num;
 	int input_num;
 	Size kernel_size;
-private:
 	Size output_size;//卷积层输出size由卷积核和输入层决定
 	int step;
 };

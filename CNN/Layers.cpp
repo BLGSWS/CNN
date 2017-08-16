@@ -25,13 +25,6 @@ Conv_layer::Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
 
 void Conv_layer::feed_forward(const Matrix &input)
 {
-	if (input.get_height() != input_num || !same_size(input.get_size(), input_size))
-	{
-		cout << input << endl;
-		cout << input_num << " " << input_size.width << " " << input_size.height;
-		cout << "Conv_layer: get_output: not match input map" << endl;
-		throw exception();
-	}
 	for (int m = 0; m < output_num; m++)
 		for (int i = 0; i < output_size.height; i++)
 			for (int j = 0; j < output_size.width; j++)
@@ -45,10 +38,6 @@ void Conv_layer::feed_forward(const Matrix &input)
 
 void Conv_layer::post_propagate(const Matrix &input, Matrix &post_rd)
 {
-	if (!same_size(input, post_rd))
-	{
-		throw exception();
-	}
 	for (int i = 0; i < input_num; i++)
 		for (int m = 0; m < input_size.height; m++)
 			for (int n = 0; n < input_size.width; n++)
@@ -62,10 +51,6 @@ void Conv_layer::post_propagate(const Matrix &input, Matrix &post_rd)
 
 void Conv_layer::change_weight(const Matrix &input, const double &stride)
 {
-	if (input.get_height() != input_num || !same_size(input.get_size(), input_size))
-	{
-		throw exception();
-	}
 	for (int i = 0; i < kernel_mat.get_height(); i++)
 		for (int j = 0; j < kernel_mat.get_width(); j++)
 			for (int u = 0; u < kernel_size.height; u++)
@@ -78,11 +63,6 @@ void Conv_layer::change_weight(const Matrix &input, const double &stride)
 
 void Conv_layer::output_layer_residual(const Matrix &targets)
 {
-	if (!same_size(targets, output_mat))
-	{
-		cout << "Conv_layer: get_residual: not formal targets" << endl;
-		throw exception();
-	}
 	for (int i = 0; i < targets.get_height(); i++)
 		for (int m = 0; m < targets.get_size().height; m++)
 			for (int n = 0; n < targets.get_size().width; n++)
@@ -105,12 +85,6 @@ Pool_layer::Pool_layer(const Size &k_size, const Size &i_size, const int &o_num,
 
 void Pool_layer::feed_forward(const Matrix &input)
 {
-	if (input.get_height() != output_num)
-	{
-		cout << input.get_height() << " " << output_num << endl;
-		cout << "Pool_layer: get_output: not match input map" << endl;
-		throw exception();
-	}
 	for (int k = 0; k < output_num; k++)
 		for (int j = 0; j < output_size.width; j++)
 			for (int i = 0; i < output_size.height; i++)
