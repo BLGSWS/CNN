@@ -1,16 +1,11 @@
 #include"CNN.h"
 
-Layer_info::Layer_info(const Size &s, const int &o_num)
-{
-	size = s;
-	output_num = o_num;
-}
+Layer_info::Layer_info(const Size &s, const int &o_num):
+	size(s), output_num(o_num)
+{}
 
-CNN::CNN()
-{
-	error = 100.0;
-	count = 1;
-}
+CNN::CNN(): error(100.0), count(1) 
+{}
 
 CNN::~CNN()
 {

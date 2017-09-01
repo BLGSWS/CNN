@@ -58,7 +58,7 @@ public:
 	Map() :
 		height(0), width(0), map(0) { }
 	Map(const Size &s) :
-		height(s.height), width(s.width)
+		height(s.height), width(s.width), map(0)
 	{
 		map = new double[height*width];
 		for (int i = 0; i < height*width; i++)
@@ -121,7 +121,7 @@ public:
 	Matrix():
 		height(0), width(0), matrix(0){}
 	Matrix(const Size &s, const int &h, const int &w):
-		height(h), width(w), size(s)
+		height(h), width(w), size(s), matrix(0)
 	{
 		matrix = new Map[height*width];
 		for (int i = 0; i < height*width; i++)

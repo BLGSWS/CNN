@@ -31,6 +31,8 @@ public:
 	void grad_check(const Matrix &target);//梯度检测
 	Layer& get_layer(const int &i);//访问神经网络某层
 private:
+	CNN(const CNN &cnn);
+	CNN operator=(const CNN &cnn);
 	vector<Layer*> layers;
 	vector<Layer_info> infos;
 	double error;

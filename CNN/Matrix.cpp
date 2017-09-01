@@ -115,17 +115,13 @@ inline double Tanh::d_activation(const double &x)
 	return 1.0 / (x*x + 1.0);
 }
 
-Size::Size()
-{
-	width = 64;
-	height = 64;
-}
+Size::Size():
+	width(64), height(64)
+{}
 
-Size::Size(const int &h, const int &w)
-{
-	width = w;
-	height = h;
-}
+Size::Size(const int &h, const int &w):
+	width(h), height(w)
+{}
 
 bool Size::is_square() const
 {
