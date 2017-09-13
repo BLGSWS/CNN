@@ -18,7 +18,7 @@ Conv_layer::Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
 	output_size(),
 	output_mat(),
 	threshold_mat(),
-	af(),
+	af(type),
 	step(step)
 {
 	kernel_mat = Matrix(kernel_size, o_num, i_num);
@@ -27,7 +27,6 @@ Conv_layer::Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
 	int o_height = (i_size.height - k_size.height) / step + 1;
 	output_size = Size(o_width, o_height);
 	output_mat = residual_mat = Matrix(output_size, o_num, 1);
-	af = ActivationFactory(type);
 	threshold_mat = Matrix(Size(1, 1), o_num, 1);
 	this->step = step;
 }
@@ -91,14 +90,13 @@ Pool_layer::Pool_layer(const Size &k_size, const Size &i_size, const int &o_num,
 	output_size(),
 	output_mat(),
 	threshold_mat(),
-	af()
+	af(type)
 {
 	kernel_mat = Matrix::Ones(k_size, 1, 1);//¾ùÖµ¾í»ý
 	kernel_mat.multiply(1.0 / (k_size.height*k_size.width));
 	output_size = Size(input_size.height / kernel_size.height, input_size.width / kernel_size.width);
 	output_mat = residual_mat = Matrix(output_size, o_num, 1);
 	threshold_mat = Matrix(Size(1, 1), o_num, 1);
-	af = ActivationFactory(type);
 }
 
 void Pool_layer::feed_forward(const Matrix &input)

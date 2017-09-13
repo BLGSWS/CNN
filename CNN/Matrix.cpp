@@ -53,25 +53,6 @@ ActivationFactory::ActivationFactory(const string &type)
 	}
 }
 
-ActivationFactory::ActivationFactory(const ActivationFactory &af)
-{
-	act_type = af.act_type;
-	if (af.act_type == "sigmoid")
-		act = new Sigmoid();
-	if (af.act_type == "tanh")
-		act = new Tanh();
-}
-
-ActivationFactory ActivationFactory::operator=(const ActivationFactory &af)
-{
-	act_type = af.act_type;
-	if (af.act_type == "sigmoid")
-		act = new Sigmoid();
-	if (af.act_type == "tanh")
-		act = new Tanh();
-	return *this;
-}
-
 ActivationFactory::~ActivationFactory()
 {
 	delete act;

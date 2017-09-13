@@ -38,5 +38,6 @@ private:
 	double error;
 	int count;
 	int max_count;
+	static CNN *instance;
 };
 

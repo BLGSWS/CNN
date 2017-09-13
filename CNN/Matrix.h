@@ -17,13 +17,14 @@ public:
 class ActivationFactory
 {
 public:
-	ActivationFactory();
 	~ActivationFactory();
-	ActivationFactory(const ActivationFactory &af);
-	ActivationFactory operator=(const ActivationFactory &af);
 	ActivationFactory(const string &type);
 	Activation *act;
 	string act_type;
+private:
+	ActivationFactory();
+	ActivationFactory(const ActivationFactory &af);
+	ActivationFactory operator=(const ActivationFactory &af);
 };
 
 class Sigmoid : public Activation

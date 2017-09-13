@@ -21,7 +21,8 @@ class Conv_layer: public Layer
 public:
 	Conv_layer():
 		output_size(),
-		step(1)
+		step(1),
+		af("sigmoid")
 	{
 		output_size = Size(1, 1);
 	}
