@@ -17,19 +17,19 @@ class CNN
 public:
 	CNN();
 	~CNN();
-	void add_Input_layer(const Size &i_size, const int &i_num);//Ìí¼ÓÊäÈë²ã
-	void add_Conv_layer(const Size &k_size, const int &o_num, const int &step, const string &act_type);//Ìí¼Ó¾í»ý²ã
-	void add_Classify_layer(const int &o_num, const string act_type);//Ìí¼ÓÊä³ö²ã
-	void add_Pool_layer(const Size &k_size, const string &act_type);//Ìí¼Ó³Ø»¯²ã
-	void add_Network_layer(const int &i_num, const int &o_num, const string &act_type);//Ìí¼ÓÉñ¾­ÍøÂç²ã
-	void train(const Matrix &input, const Matrix &target, const double &stride);//ÑµÁ·
-	Matrix& predict(const Matrix &input);//Ô¤²â
-	double get_error(const Matrix &output, const Matrix &target);//Ò»´ÎÑµÁ·Îó²î
+	void add_Input_layer(const Size &i_size, const int &i_num);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	void add_Conv_layer(const Size &k_size, const int &o_num, const int &step, const string &act_type);//ï¿½ï¿½ï¿½Ó¾ï¿½ï¿½ï¿½ï¿½ï¿½
+	void add_Classify_layer(const int &o_num, const string act_type);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	void add_Pool_layer(const Size &k_size, const string &act_type);//ï¿½ï¿½ï¿½Ó³Ø»ï¿½ï¿½ï¿½
+	void add_Network_layer(const int &i_num, const int &o_num, const string &act_type);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	void train(const Matrix &input, const Matrix &target, const double &stride);//Ñµï¿½ï¿½
+	Matrix& predict(const Matrix &input);//Ô¤ï¿½ï¿½
+	double get_error(const Matrix &output, const Matrix &target);//Ò»ï¿½ï¿½Ñµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	int select(const Matrix &output) const;
-	double get_avg_error() const;//Æ½¾ùÎó²î
+	double get_avg_error() const;//Æ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	Matrix& get_output();
-	void grad_check(const Matrix &target);//ÌÝ¶È¼ì²â
-	Layer& get_layer(const int &i);//·ÃÎÊÉñ¾­ÍøÂçÄ³²ã
+	void grad_check(const Matrix &target);//ï¿½Ý¶È¼ï¿½ï¿½ï¿½
+	Layer& get_layer(const int &i);//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½
 private:
 	CNN(const CNN &cnn);
 	CNN operator=(const CNN &cnn);

@@ -183,7 +183,7 @@ void CNN::grad_check(const Matrix &target)
 		if (flag == false)
 		{
 			cout << grad;
-			system("pause");
+			throw exception();
 		}
 		else
 			cout << "grad check fine" << endl;

@@ -1,4 +1,5 @@
 #pragma once
+#include <stdlib.h>
 #include <ostream>
 #include <iostream>
 #include <math.h>
@@ -85,9 +86,9 @@ public:
 		copy_data(m);
 		return *this;
 	}
-	inline double& value(const int &i, const int &j) const;
-	inline double convolute(const Map &kernel, const int &y, const int &x) const;
-	inline double convolute2(const Map &kernel, const int &y, const int &x) const
+	double& value(const int &i, const int &j) const;
+	double convolute(const Map &kernel, const int &y, const int &x) const;
+	double convolute2(const Map &kernel, const int &y, const int &x) const
 	{
 		if (y<-kernel.height + 1 || x<-kernel.width + 1 || y>height - 1 || x>width - 1)
 		{

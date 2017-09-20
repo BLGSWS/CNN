@@ -1,6 +1,6 @@
 //#define GRAD_CHECK//梯度检查
-//#define DEBUG
-#define MNIST//测试
+#define DEBUG
+//#define MNIST
 //#define OPENCV//对图片的预处理，图片压缩裁剪，rgb及灰度图输出，依赖openCV
 
 #include<iostream>
@@ -111,5 +111,7 @@ int main()
 		n++;
 	}
 #endif
-	system("pause");
+	int a;
+	cin >> a;
+	return 0;
 }
