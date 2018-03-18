@@ -2,20 +2,37 @@
 #include "Matrix.h"
 using namespace std;
 
+/**
+ * å±‚æ¥å£
+ * */
 class Layer
 {
 public:
-	virtual void feed_forward(const Matrix &input) = 0;//Ç°Ïò´«²¥
-	virtual void post_propagate(const Matrix &input, Matrix &rd_mat) = 0;//ºóÏò´«²¥
-	virtual void change_weight(const Matrix &input, const double &stride) = 0;//µ÷ÕûÈ¨Öµ
-	virtual void output_layer_residual(const Matrix &target) = 0;//¼ÆËã²Ğ²î
+	/**
+	 * å‰å‘ä¼ æ’­
+	 * */
+	virtual void feed_forward(const Matrix &input) = 0;
+	/**
+	 * åå‘ä¼ æ’­
+	 * */
+	virtual void post_propagate(const Matrix &input, Matrix &rd_mat) = 0;
+	/**
+	 * è°ƒæ•´æƒå€¼
+	 * */
+	virtual void change_weight(const Matrix &input, const double &stride) = 0;
+	/**
+	 * è®¡ç®—æ®‹å·®
+	 * */
+	virtual void output_layer_residual(const Matrix &target) = 0;
 	virtual Matrix& get_output() = 0;
 	virtual Matrix& get_residual() = 0;
 	virtual Activation* get_activation() const = 0;
 	virtual ~Layer() = 0;
 };
 
-/*¾í»ı²ã*/
+/**
+ * å·ç§¯å±‚
+*/
 class Conv_layer: public Layer
 {
 public:
@@ -26,6 +43,15 @@ public:
 	{
 		output_size = Size(1, 1);
 	}
+	/**
+	 * å·ç§¯å±‚
+	 * param k_size: å·ç§¯æ ¸å¤§å°
+	 * param i_size: è¾“å…¥å±‚mapå¤§å°
+	 * param i_num: è¾“å…¥å±‚mapä¸ªæ•°
+	 * param o_numï¼š è¾“å‡ºå±‚mapä¸ªæ•°
+	 * param step: å·ç§¯æ ¸æ‰«ææ­¥é•¿
+	 * param type: æ¿€æ´»å‡½æ•°ç±»å‹
+	 * */
 	Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
 		const int &o_num, const int &step, const string &type);
 	void feed_forward(const Matrix &input);
@@ -53,24 +79,45 @@ public:
 		return af.act;
 	}
 private:
-	ActivationFactory af;//¼¤»îº¯ÊıÀàĞÍ
-	Matrix output_mat;//Êä³ömap
-	Matrix residual_mat;//²Ğ²î´¢´æ¾ØÕó£¬ÓëÊä³ömap½á¹¹ÏàÍ¬
-	Size input_size;//ÊäÈëmap³ß´ç
-	Matrix kernel_mat;//¾í»ıºË
-	Matrix threshold_mat;//ãĞÖµ
-	int kernel_num;//¾í»ıºËÊıÁ¿
-	int output_num;//Êä³ömapÊıÁ¿
-	int input_num;//ÊäÈëmapÊıÁ¿
-	Size kernel_size;//¾í»ıºË³ß´ç
-	Size output_size;//¾í»ı²ãÊä³ösizeÓÉ¾í»ıºËºÍÊäÈë²ã¾ö¶¨
-	int step;//¾í»ı²½³¤
+	/// æ¿€æ´»å‡½æ•°ç±»å‹
+	ActivationFactory af;
+	/// è¾“å‡ºmap
+	Matrix output_mat;
+	/// å­˜å‚¨æ®‹å·®çŸ©é˜µ
+	Matrix residual_mat;
+	/// è¾“å…¥mapå°ºå¯¸
+	Size input_size;
+	/// å·ç§¯æ ¸
+	Matrix kernel_mat;
+	/// é˜ˆå€¼çŸ©é˜µ
+	Matrix threshold_mat;
+	/// å·ç§¯æ ¸æ•°é‡
+	int kernel_num;
+	/// è¾“å‡ºmapæ•°é‡
+	int output_num;
+	/// è¾“å…¥mapæ•°é‡
+	int input_num;
+	/// å·ç§¯æ ¸å°ºå¯¸
+	Size kernel_size;
+	/// å·ç§¯å±‚è¾“å‡ºsizeç”±å·ç§¯å±‚å’Œè¾“å…¥å±‚å†³å®š
+	Size output_size;
+	/// å·ç§¯stride
+	int step;
 };
 
-/*³Ø»¯²ã*/
+/**
+ * æ± åŒ–å±‚
+ * */
 class Pool_layer: public Layer
 {
 public:
+	/**
+	 * æ± åŒ–å±‚
+	 * param k_size: å·ç§¯æ ¸å¤§å°
+	 * param i_size: è¾“å…¥å±‚mapå¤§å°
+	 * param o_num: è¾“å‡ºå±‚æ•°ç›®
+	 * param type: æ¿€æ´»å‡½æ•°ç±»å‹
+	 * */
 	Pool_layer(const Size &k_size, const Size &i_size, const int &o_num, const string &type);
 	void feed_forward(const Matrix &input);
 	void change_weight(const Matrix &input, const double &stride);
@@ -96,13 +143,22 @@ public:
 		return af.act;
 	}
 private:
-	ActivationFactory af;//¼¤»îº¯ÊıÀàĞÍ
-	Matrix residual_mat;//²Ğ²î´¢´æ¾ØÕó
-	Matrix output_mat;//Êä³ömap
-	Size kernel_size;//¾í»ıºË³ß´ç
-	Size input_size;//ÊäÈëmap³ß´ç
-	Size output_size;//Êä³ömap³ß´ç
-	Matrix kernel_mat;//¾í»ıºË
-	Matrix threshold_mat;//ãĞÖµ
-	int output_num;//Êä³ömapÊıÁ¿
+	/// æ¿€æ´»å‡½æ•°ç±»å‹
+	ActivationFactory af;
+	/// å‚å·®å­˜å‚¨çŸ©é˜µ
+	Matrix residual_mat;
+	/// è¾“å‡ºMap
+	Matrix output_mat;
+	/// å·ç§¯æ ¸å°ºå¯¸
+	Size kernel_size;
+	/// è¾“å…¥Mapå°ºå¯¸
+	Size input_size;
+	/// è¾“å‡ºMapå°ºå¯¸
+	Size output_size;
+	/// å·ç§¯æ ¸
+	Matrix kernel_mat;
+	/// é˜ˆå€¼
+	Matrix threshold_mat;
+	/// è¾“å‡ºMapæ•°é‡
+	int output_num;
 };

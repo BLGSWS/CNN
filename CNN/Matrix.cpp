@@ -1,6 +1,8 @@
 #include "Matrix.h"
 #include <string>
 
+#define DEBUG
+
 ostream &operator<<(ostream &os, const Map &m)
 {
 	for (int i = 0; i < m.height; i++)
@@ -111,6 +113,13 @@ bool Size::is_square() const
 	else
 		return false;
 }
+	
+Map::Map(const Size &s) : height(s.height), width(s.width), map(0)
+{
+	map = new double[height*width];
+	for (int i = 0; i < height*width; i++)
+		map[i] = 0.0;
+}
 
 Map Map::Identity(const Size &s)
 {
@@ -148,12 +157,14 @@ Map Map::Random(const Size &s)
 
 inline double& Map::value(const int &i, const int &j) const
 {
+#ifdef DEBUG
 	if (i > height - 1 || j > width - 1 || i < 0 || j < 0)
 	{
 		cout << "(" << i << "," << j << ") is out of h="
 			<< height << " and w=" << width << endl;
 		throw  exception();
 	}
+#endif
 	return *(map + i*width + j);
 }
 
@@ -204,6 +215,54 @@ void Map::copy_data(const Map &m)
 	}
 }
 
+Map::~Map()
+{
+	delete[] map;
+	map = 0;
+}
+
+Map::Map(const Map &m)
+{
+	copy_data(m);
+}
+
+Map& Map::operator=(const Map &m)
+{
+	if (this == &m) return *this;
+	delete[] map;
+	map = 0;
+	copy_data(m);
+	return *this;
+}
+
+double Map::convolute2(const Map &kernel, const int &y, const int &x) const
+{
+#ifdef DEBUG
+	if (y<-kernel.height + 1 || x<-kernel.width + 1 || y>height - 1 || x>width - 1)
+	{
+		cout << "Map: convolute2: kernel will out of map" << endl;
+		throw  exception();
+	}
+#endif
+	double sum = 0.0;
+	for (int i = 0; i < kernel.height; i++)
+		for (int j = 0; j < kernel.width; j++)
+		{
+			if (y + i < 0 || x + j < 0 || y + i > height - 1 || x + j > width - 1)
+				continue;
+			sum += kernel.value(kernel.height - i - 1, kernel.width - j - 1)*(*this).value(y + i, x + j);
+		}
+	return sum;
+}
+
+Matrix::Matrix(const Size &s, const int &h, const int &w):
+		height(h), width(w), size(s), matrix(0)
+{
+	matrix = new Map[height*width];
+	for (int i = 0; i < height*width; i++)
+		matrix[i] = Map(s);
+}
+
 Matrix Matrix::Identity(const Size &s, const int &h, const int &w)
 {
 	Matrix mat;
@@ -243,27 +302,27 @@ Matrix Matrix::Random(const Size &s, const int &h, const int &w)
 
 Map& Matrix::operator()(const int &i, const int &j) const
 {
+#ifdef DEBUG
 	if (i > height - 1 || j > width - 1 || i < 0 || j < 0)
 	{
 		cout << "(" << i << "," << j << ")"
 			<< " is out of h=" << height << " and w=" << width << endl;
 		throw  exception();
 	}
+#endif
 	return *(matrix + i*width + j);
 }
 
 double Matrix::dot(const Matrix &kernel, const int &row, const int &col, const int &y, const int &x) const
-//:param kernel: 卷积核
-//:param row: 卷积核Matix行数
-//:param col: 输入Matix列数
-//:param y, x: 卷积中心列、行数
 {
+#ifdef DEBUG
 	if (height != kernel.width)
 	{
 		cout << height << " " << kernel.width;
 		cout << "Matrix: dot: row size not match with column size" << endl;
 		throw exception();
 	}
+#endif
 	double sum = 0.0;
 	for (int i = 0; i < width; i++)
 		sum += (*this)(i, col).convolute(kernel(row, i), y, x);
@@ -282,19 +341,25 @@ void Matrix::clear()
 		matrix[i].clear();
 }
 
-int Matrix::get_height() const
+Matrix& Matrix::operator=(const Matrix &mat)
 {
-	return height;
+	if (this == &mat) return *this;
+	delete [] matrix;
+	matrix = 0;
+	copy_data(mat);
+	return *this;
 }
 
-int Matrix::get_width() const
+
+Matrix::~Matrix()
 {
-	return width;
+	delete[] matrix;
+	matrix = 0;
 }
 
-Size Matrix::get_size() const
+Matrix::Matrix(const Matrix &mat)
 {
-	return size;
+	copy_data(mat);
 }
 
 void Matrix::copy_data(const Matrix &m)

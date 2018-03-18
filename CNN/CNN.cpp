@@ -58,7 +58,6 @@ void CNN::add_Network_layer(const int &i_num, const int &o_num, const string &ac
 
 void CNN::train(const Matrix &input, const Matrix &target, const double &stride)
 {
-	//前向传播
 	for (vector<Layer*>::iterator it = layers.begin(); it != layers.end(); it++)
 	{
 		if (it == layers.begin())
@@ -66,16 +65,13 @@ void CNN::train(const Matrix &input, const Matrix &target, const double &stride)
 		else
 			(*it)->feed_forward((*(it - 1))->get_output());
 	}
-	//反向传播
 	for (vector<Layer*>::iterator it = layers.end() - 1; it != layers.begin(); it--)
 	{
 		if (it == layers.end() - 1)
 			(*it)->output_layer_residual(target);
 		(*it)->post_propagate((*(it - 1))->get_output(), (*(it - 1))->get_residual());
 	}
-	//梯度检查
 	grad_check(target);
-	//权重调整
 	for (vector<Layer*>::iterator it = layers.begin(); it != layers.end(); it++)
 	{
 		if (it == layers.begin())
@@ -147,7 +143,7 @@ void CNN::grad_check(const Matrix &target)
 #endif
 	for (vector<Layer*>::iterator it = layers.begin(); it != layers.end(); it++)
 	{
-		bool flag = true;//是否通过梯度检查
+		bool flag = true;
 		Matrix grad((*it)->get_residual().get_size(), (*it)->get_residual().get_height(), 1);
 		for (int i = 0; i<(*it)->get_output().get_height(); i++)
 			for (int m = 0; m<(*it)->get_output().get_size().height; m++)

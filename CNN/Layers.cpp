@@ -4,12 +4,6 @@ Layer::~Layer() {}
 
 Conv_layer::Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
 	const int &o_num, const int &step, const string &type):
-	//:param k_size: 卷积核大小
-	//:param i_size: 输入层map大小
-	//:param i_num: 输出层map个数
-	//:param o_num: 输出层map个数
-	//:param step: 卷积核扫描步长
-	//:param type: 激活函数类型
 	kernel_size(k_size),
 	input_size(i_size),
 	output_num(o_num),
@@ -22,7 +16,7 @@ Conv_layer::Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
 	step(step)
 {
 	kernel_mat = Matrix(kernel_size, o_num, i_num);
-	//kernel_mat.multiply(-0.01);//初始权值-0.1
+	//kernel_mat.multiply(-0.01);
 	int o_width = (i_size.width - k_size.width) / step + 1;
 	int o_height = (i_size.height - k_size.height) / step + 1;
 	output_size = Size(o_width, o_height);
@@ -79,10 +73,6 @@ void Conv_layer::output_layer_residual(const Matrix &targets)
 }
 
 Pool_layer::Pool_layer(const Size &k_size, const Size &i_size, const int &o_num, const string &type):
-	//:param k_size: 卷积核大小
-	//:param i_size: 输入层map大小
-	//:param o_num: 输出层map个数
-	//:param type: 激活函数类型
 	kernel_size(k_size),
 	input_size(i_size),
 	output_num(o_num),
@@ -92,7 +82,7 @@ Pool_layer::Pool_layer(const Size &k_size, const Size &i_size, const int &o_num,
 	threshold_mat(),
 	af(type)
 {
-	kernel_mat = Matrix::Ones(k_size, 1, 1);//均值卷积
+	kernel_mat = Matrix::Ones(k_size, 1, 1);
 	kernel_mat.multiply(1.0 / (k_size.height*k_size.width));
 	output_size = Size(input_size.height / kernel_size.height, input_size.width / kernel_size.width);
 	output_mat = residual_mat = Matrix(output_size, o_num, 1);
@@ -112,7 +102,6 @@ void Pool_layer::feed_forward(const Matrix &input)
 
 void Pool_layer::change_weight(const Matrix &input, const double &stride)
 {
-	//阈值调整
 	for (int i = 0; i < output_num; i++)
 		threshold_mat(i, 0).value(0, 0) += residual_mat(i, 0).norm();
 	residual_mat.clear();
