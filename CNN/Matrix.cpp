@@ -3,6 +3,8 @@
 
 #define DEBUG
 
+namespace cnn {
+
 ostream &operator<<(ostream &os, const Map &m)
 {
 	for (int i = 0; i < m.height; i++)
@@ -376,3 +378,5 @@ void Matrix::copy_data(const Matrix &m)
 			matrix[i] = m.matrix[i];
 	}
 }
+
+} /// namespace CNN

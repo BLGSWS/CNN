@@ -3,6 +3,9 @@
 #include"Input.h"
 #include"Layers.h"
 #include"Matrix.h"
+
+namespace cnn {
+
 class Layer_info
 {
 public:
@@ -81,3 +84,4 @@ private:
 	static CNN *instance;
 };
 
+} /// namespace cnn

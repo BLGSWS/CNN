@@ -6,6 +6,8 @@
 #include <time.h>
 using namespace std;
 
+namespace cnn { 
+
 /**
  * 激活函数接口
  * */
@@ -143,3 +145,5 @@ private:
 	Size size;
 	Map *matrix;
 };
+
+} /// namespace cnn

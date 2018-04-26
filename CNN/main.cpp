@@ -1,7 +1,7 @@
-//#define GRAD_CHECK//ÌÝ¶È¼ì²é
+//#define GRAD_CHECK//ï¿½Ý¶È¼ï¿½ï¿½
 #define DEBUG
 //#define MNIST
-//#define OPENCV//¶ÔÍ¼Æ¬µÄÔ¤´¦Àí£¬Í¼Æ¬Ñ¹Ëõ²Ã¼ô£¬rgb¼°»Ò¶ÈÍ¼Êä³ö£¬ÒÀÀµopenCV
+//#define OPENCV//ï¿½ï¿½Í¼Æ¬ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½Í¼Æ¬Ñ¹ï¿½ï¿½ï¿½Ã¼ï¿½rgbï¿½ï¿½ï¿½Ò¶ï¿½Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½openCV
 
 #include<iostream>
 #include<fstream>
@@ -10,6 +10,7 @@
 #include "CNN.h"
 #include "Input.h"
 using namespace std;
+using namespace cnn;
 
 int main()
 {
@@ -61,7 +62,7 @@ int main()
 			if (k > 3)
 				break;
 			string::size_type j = 0;
-			//Ìø¹ýµÚÒ»ÐÐ
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 			if (isalpha(str[0]))
 				continue;
 			int num = 0;
@@ -91,7 +92,7 @@ int main()
 		if (n > 3)
 			break;
 		string::size_type j = 0;
-		//Ìø¹ýµÚÒ»ÐÐ
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 		if (isalpha(str[0]))
 			continue;
 		int num = 0;

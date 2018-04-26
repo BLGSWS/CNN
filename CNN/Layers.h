@@ -2,6 +2,8 @@
 #include "Matrix.h"
 using namespace std;
 
+namespace cnn {
+
 /**
  * 层接口
  * */
@@ -162,3 +164,5 @@ private:
 	/// 输出Map数量
 	int output_num;
 };
+
+}

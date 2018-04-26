@@ -1,5 +1,7 @@
 #include"Layers.h"
 
+namespace cnn {
+
 Layer::~Layer() {}
 
 Conv_layer::Conv_layer(const Size &k_size, const Size &i_size, const int &i_num,
@@ -110,10 +112,16 @@ void Pool_layer::change_weight(const Matrix &input, const double &stride)
 void Pool_layer::post_propagate(const Matrix &input, Matrix &post_rd)
 {
 	for (int i = 0; i < post_rd.get_height(); i++)
+	{
 		for (int m = 0; m < input_size.height; m++)
+		{
 			for (int n = 0; n < input_size.width; n++)
 			{
 				double dif = residual_mat(i, 0).value(m / kernel_size.height, n / kernel_size.width);
 				post_rd(i, 0).value(m, n) += dif*af.act->d_activation(input(i, 0).value(m, n)) / kernel_size.height / kernel_size.width;
 			}
+		}
+	}
 }
+
+} /// namespace cnn 

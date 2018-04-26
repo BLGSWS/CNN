@@ -1,5 +1,7 @@
 #include"CNN.h"
 
+namespace cnn {
+
 Layer_info::Layer_info(const Size &s, const int &o_num):
 	size(s), output_num(o_num)
 {}
@@ -190,3 +192,5 @@ Layer& CNN::get_layer(const int &i)
 {
 	return *(layers[i]);
 }
+
+} /// namespce cnn
